@@ -1,6 +1,8 @@
 # pkg
-======
 ![Project status](https://img.shields.io/badge/version-1.0.0-green.svg)
+[![Build Status](https://travis-ci.org/go-playground/pkg.svg?branch=master)](https://travis-ci.org/go-playground/pkg)
+[![Coverage Status](https://coveralls.io/repos/github/go-playground/pkg/badge.svg?branch=master)](https://coveralls.io/github/go-playground/pkg?branch=master)
+[![GoDoc](https://godoc.org/github.com/go-playground/pkg?status.svg)](https://godoc.org/github.com/go-playground/pkg)
 ![License](https://img.shields.io/dub/l/vibe-d.svg)
 
 pkg extends the core go packages with missing or additional functionality built in. All packages correspond to the std go package name with an additional suffix of `util` to avoid naming conflicts.
