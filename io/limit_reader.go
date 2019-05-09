@@ -34,12 +34,12 @@ func (l *LimitedReader) Read(p []byte) (n int, err error) {
 		p = p[0 : l.N+1]
 	}
 	n, err = l.R.Read(p)
-	if err == io.EOF {
+	l.N -= int64(n)
+	if err != nil {
 		return
 	}
-	l.N -= int64(n)
 	if l.N < 0 {
-		return len(p), LimitedReaderEOF
+		return n, LimitedReaderEOF
 	}
 	return
 }
