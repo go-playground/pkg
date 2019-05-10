@@ -11,9 +11,8 @@ var (
 	LimitedReaderEOF = errors.New("LimitedReader EOF: limit reached")
 )
 
-// LimitReader returns a Reader that reads from r
+// LimitReader returns a LimitedReader that reads from r
 // but stops with LimitedReaderEOF after n bytes.
-// The underlying implementation is a *LimitedReader.
 func LimitReader(r io.Reader, n int64) *LimitedReader {
 	return &LimitedReader{R: r, N: n}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func TestLimitedReader_Read(t *testing.T) {
-	eofLimited := LimitReader(strings.NewReader("all"), 5).(*LimitedReader)
+	eofLimited := LimitReader(strings.NewReader("all"), 5)
 
 	type args struct {
 		p []byte
@@ -20,14 +20,14 @@ func TestLimitedReader_Read(t *testing.T) {
 	}{
 		{
 			name:    "not-limited",
-			l:       LimitReader(strings.NewReader("all"), 3).(*LimitedReader),
+			l:       LimitReader(strings.NewReader("all"), 3),
 			args:    args{p: make([]byte, 4)},
 			wantN:   3,
 			wantErr: false,
 		},
 		{
 			name:    "not-limited-exact",
-			l:       LimitReader(strings.NewReader("all"), 3).(*LimitedReader),
+			l:       LimitReader(strings.NewReader("all"), 3),
 			args:    args{p: make([]byte, 3)},
 			wantN:   3,
 			wantErr: false,
@@ -48,14 +48,14 @@ func TestLimitedReader_Read(t *testing.T) {
 		},
 		{
 			name:    "limited",
-			l:       LimitReader(strings.NewReader("limited"), 1).(*LimitedReader),
+			l:       LimitReader(strings.NewReader("limited"), 1),
 			args:    args{p: make([]byte, 3)},
 			wantN:   2, // need to read one past to know we're past
 			wantErr: true,
 		},
 		{
 			name:    "limited-buff-under-N",
-			l:       LimitReader(strings.NewReader("limited"), 0).(*LimitedReader),
+			l:       LimitReader(strings.NewReader("limited"), 0),
 			args:    args{p: make([]byte, 1)},
 			wantN:   1,
 			wantErr: true,
