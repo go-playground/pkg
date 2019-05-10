@@ -1,4 +1,4 @@
-package errorsext
+package runtimeext
 
 import (
 	"testing"
