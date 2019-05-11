@@ -265,11 +265,11 @@ func TestDecode(t *testing.T) {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/decode-noquery", func(w http.ResponseWriter, r *http.Request) {
-		err := Decode(r, false, 16<<10, test)
+		err := Decode(r, NoQueryParams, 16<<10, test)
 		Equal(t, err, nil)
 	})
 	mux.HandleFunc("/decode-query", func(w http.ResponseWriter, r *http.Request) {
-		err := Decode(r, true, 16<<10, test)
+		err := Decode(r, QueryParams, 16<<10, test)
 		Equal(t, err, nil)
 	})
 

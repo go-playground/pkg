@@ -14,6 +14,14 @@ import (
 	ioext "github.com/go-playground/pkg/io"
 )
 
+// QueryParamsOption represents the options for including query parameters during Decode helper functions
+type QueryParamsOption uint8
+
+const (
+	QueryParams QueryParamsOption = iota
+	NoQueryParams
+)
+
 var (
 	xmlHeaderBytes = []byte(xml.Header)
 )
@@ -159,13 +167,14 @@ func XMLBytes(w http.ResponseWriter, status int, b []byte) (err error) {
 //
 // The Content-Type and http method are not checked.
 //
-// NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
+// NOTE: when QueryParamsOption=QueryParams the query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed Form.
-func DecodeForm(r *http.Request, includeQueryParams bool, v interface{}) (err error) {
+func DecodeForm(r *http.Request, qp QueryParamsOption, v interface{}) (err error) {
 	if err = r.ParseForm(); err == nil {
-		if includeQueryParams {
+		switch qp {
+		case QueryParams:
 			err = DefaultDecoder.Decode(v, r.Form)
-		} else {
+		case NoQueryParams:
 			err = DefaultDecoder.Decode(v, r.PostForm)
 		}
 	}
@@ -178,11 +187,12 @@ func DecodeForm(r *http.Request, includeQueryParams bool, v interface{}) (err er
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed MultipartForm.
-func DecodeMultipartForm(r *http.Request, includeQueryParams bool, maxMemory int64, v interface{}) (err error) {
+func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	if err = r.ParseMultipartForm(maxMemory); err == nil {
-		if includeQueryParams {
+		switch qp {
+		case QueryParams:
 			err = DefaultDecoder.Decode(v, r.Form)
-		} else {
+		case NoQueryParams:
 			err = DefaultDecoder.Decode(v, r.MultipartForm.Value)
 		}
 	}
@@ -196,7 +206,7 @@ func DecodeMultipartForm(r *http.Request, includeQueryParams bool, maxMemory int
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed JSON and replaces any value that may have been present
-func DecodeJSON(r *http.Request, includeQueryParams bool, maxMemory int64, v interface{}) (err error) {
+func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	var body io.Reader = r.Body
 	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
 		var gzr *gzip.Reader
@@ -210,7 +220,7 @@ func DecodeJSON(r *http.Request, includeQueryParams bool, maxMemory int64, v int
 		body = gzr
 	}
 	err = json.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
-	if includeQueryParams && err == nil {
+	if qp == QueryParams && err == nil {
 		err = DecodeQueryParams(r, v)
 	}
 	return
@@ -223,7 +233,7 @@ func DecodeJSON(r *http.Request, includeQueryParams bool, maxMemory int64, v int
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed XML and replaces any value that may have been present
-func DecodeXML(r *http.Request, includeQueryParams bool, maxMemory int64, v interface{}) (err error) {
+func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	var body io.Reader = r.Body
 	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
 		var gzr *gzip.Reader
@@ -237,7 +247,7 @@ func DecodeXML(r *http.Request, includeQueryParams bool, maxMemory int64, v inte
 		body = gzr
 	}
 	err = xml.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
-	if includeQueryParams && err == nil {
+	if qp == QueryParams && err == nil {
 		err = DecodeQueryParams(r, v)
 	}
 	return
@@ -263,22 +273,22 @@ const (
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed XML and replaces any value that may have been present
-func Decode(r *http.Request, includeQueryParams bool, maxMemory int64, v interface{}) (err error) {
+func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	typ := r.Header.Get(ContentType)
 	if idx := strings.Index(typ, ";"); idx != -1 {
 		typ = typ[:idx]
 	}
 	switch typ {
 	case nakedApplicationJSON:
-		err = DecodeJSON(r, includeQueryParams, maxMemory, v)
+		err = DecodeJSON(r, qp, maxMemory, v)
 	case nakedApplicationXML:
-		err = DecodeXML(r, includeQueryParams, maxMemory, v)
+		err = DecodeXML(r, qp, maxMemory, v)
 	case ApplicationForm:
-		err = DecodeForm(r, includeQueryParams, v)
+		err = DecodeForm(r, qp, v)
 	case MultipartForm:
-		err = DecodeMultipartForm(r, includeQueryParams, maxMemory, v)
+		err = DecodeMultipartForm(r, qp, maxMemory, v)
 	default:
-		if includeQueryParams {
+		if qp == QueryParams {
 			err = DecodeQueryParams(r, v)
 		}
 	}
