@@ -173,9 +173,9 @@ func DecodeForm(r *http.Request, qp QueryParamsOption, v interface{}) (err error
 	if err = r.ParseForm(); err == nil {
 		switch qp {
 		case QueryParams:
-			err = DefaultDecoder.Decode(v, r.Form)
+			err = DefaultFormDecoder.Decode(v, r.Form)
 		case NoQueryParams:
-			err = DefaultDecoder.Decode(v, r.PostForm)
+			err = DefaultFormDecoder.Decode(v, r.PostForm)
 		}
 	}
 	return
@@ -191,9 +191,9 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 	if err = r.ParseMultipartForm(maxMemory); err == nil {
 		switch qp {
 		case QueryParams:
-			err = DefaultDecoder.Decode(v, r.Form)
+			err = DefaultFormDecoder.Decode(v, r.Form)
 		case NoQueryParams:
-			err = DefaultDecoder.Decode(v, r.MultipartForm.Value)
+			err = DefaultFormDecoder.Decode(v, r.MultipartForm.Value)
 		}
 	}
 	return
@@ -255,7 +255,7 @@ func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interfa
 
 // DecodeQueryParams takes the URL Query params flag.
 func DecodeQueryParams(r *http.Request, v interface{}) (err error) {
-	err = DefaultDecoder.Decode(v, r.URL.Query())
+	err = DefaultFormDecoder.Decode(v, r.URL.Query())
 	return
 }
 

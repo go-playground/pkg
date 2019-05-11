@@ -12,6 +12,6 @@ type FormDecoder interface {
 }
 
 var (
-	// DefaultDecoder of this package, which is configurable
-	DefaultDecoder FormDecoder = form.NewDecoder()
+	// DefaultFormDecoder of this package, which is configurable
+	DefaultFormDecoder FormDecoder = form.NewDecoder()
 )
