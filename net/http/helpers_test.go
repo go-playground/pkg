@@ -192,7 +192,7 @@ func TestJSON(t *testing.T) {
 	err = JSON(w, http.StatusOK, tst)
 	Equal(t, err, nil)
 	Equal(t, w.Header().Get(ContentType), ApplicationJSON)
-	Equal(t, w.Body.Bytes(), append([]byte(b), '\n'))
+	Equal(t, w.Body.Bytes(), append([]byte(b)))
 
 	err = JSON(w, http.StatusOK, func() {})
 	NotEqual(t, err, nil)
