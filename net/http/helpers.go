@@ -103,13 +103,13 @@ func ClientIP(r *http.Request) (clientIP string) {
 
 // JSON marshals provided interface + returns JSON + status code
 func JSON(w http.ResponseWriter, status int, i interface{}) error {
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
 	enc := json.NewEncoder(w)
 	err := enc.Encode(i)
 	if err != nil {
 		return err
 	}
-	w.Header().Set(ContentType, ApplicationJSON)
-	w.WriteHeader(status)
 	return nil
 }
 
@@ -124,13 +124,12 @@ func JSONBytes(w http.ResponseWriter, status int, b []byte) (err error) {
 // JSONP sends a JSONP response with status code and uses `callback` to construct
 // the JSONP payload.
 func JSONP(w http.ResponseWriter, status int, i interface{}, callback string) error {
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
 	b, err := json.Marshal(i)
 	if err != nil {
 		return err
 	}
-	w.Header().Set(ContentType, ApplicationJSON)
-	w.WriteHeader(status)
-
 	if _, err = w.Write([]byte(callback + "(")); err == nil {
 		if _, err = w.Write(b); err == nil {
 			_, err = w.Write([]byte(");"))
@@ -141,12 +140,12 @@ func JSONP(w http.ResponseWriter, status int, i interface{}, callback string) er
 
 // XML marshals provided interface + returns XML + status code
 func XML(w http.ResponseWriter, status int, i interface{}) error {
+	w.Header().Set(ContentType, ApplicationXML)
+	w.WriteHeader(status)
 	b, err := xml.Marshal(i)
 	if err != nil {
 		return err
 	}
-	w.Header().Set(ContentType, ApplicationXML)
-	w.WriteHeader(status)
 	if _, err = w.Write(xmlHeaderBytes); err == nil {
 		_, err = w.Write(b)
 	}
