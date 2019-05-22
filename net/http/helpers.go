@@ -110,7 +110,7 @@ func JSON(w http.ResponseWriter, status int, i interface{}) error {
 	w.Header().Set(ContentType, ApplicationJSON)
 	w.WriteHeader(status)
 	_, err = w.Write(b)
-	return nil
+	return err
 }
 
 // JSONBytes returns provided JSON response with status code
@@ -118,7 +118,7 @@ func JSONBytes(w http.ResponseWriter, status int, b []byte) (err error) {
 	w.Header().Set(ContentType, ApplicationJSON)
 	w.WriteHeader(status)
 	_, err = w.Write(b)
-	return
+	return err
 }
 
 // JSONP sends a JSONP response with status code and uses `callback` to construct
