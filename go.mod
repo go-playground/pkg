@@ -1,4 +1,4 @@
-module github.com/go-playground/pkg
+module github.com/go-playground/pkg/v3
 
 go 1.11
 
