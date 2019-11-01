@@ -3,7 +3,7 @@ package httpext
 import (
 	"net/url"
 
-	"github.com/go-playground/form"
+	"github.com/go-playground/form/v4"
 )
 
 // FormDecoder is the type used for decoding a form for use
