@@ -1,4 +1,4 @@
-module github.com/go-playground/pkg/v4
+module github.com/go-playground/pkg/v5
 
 require (
 	github.com/go-playground/assert v1.2.1 // indirect

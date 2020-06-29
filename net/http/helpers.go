@@ -17,6 +17,7 @@ import (
 // QueryParamsOption represents the options for including query parameters during Decode helper functions
 type QueryParamsOption uint8
 
+// QueryParamsOption's
 const (
 	QueryParams QueryParamsOption = iota
 	NoQueryParams
