@@ -11,12 +11,13 @@ import (
 	"path/filepath"
 	"strings"
 
-	ioext "github.com/go-playground/pkg/v4/io"
+	ioext "github.com/go-playground/pkg/v5/io"
 )
 
 // QueryParamsOption represents the options for including query parameters during Decode helper functions
 type QueryParamsOption uint8
 
+// QueryParamsOption's
 const (
 	QueryParams QueryParamsOption = iota
 	NoQueryParams
