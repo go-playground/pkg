@@ -11,7 +11,12 @@ type FormDecoder interface {
 	Decode(interface{}, url.Values) error
 }
 
+type FormEncoder interface {
+	Encode(interface{}) (url.Values, error)
+}
+
 var (
 	// DefaultFormDecoder of this package, which is configurable
 	DefaultFormDecoder FormDecoder = form.NewDecoder()
+	DefaultFormEncoder FormEncoder = form.NewEncoder()
 )
