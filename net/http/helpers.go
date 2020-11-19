@@ -103,7 +103,7 @@ func ClientIP(r *http.Request) (clientIP string) {
 }
 
 //
-// JSONJSONStream uses json.Encoder to stream the JSON reponse body.
+// JSONStream uses json.Encoder to stream the JSON reponse body.
 //
 // This differs from the JSON helper which unmarshalls into memory first allowing the capture of JSON encoding errors.
 //
