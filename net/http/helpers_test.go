@@ -73,7 +73,7 @@ func TestAttachment(t *testing.T) {
 		{
 			code:        http.StatusOK,
 			disposition: "attachment;filename=readme",
-			typ:         OctetStream,
+			typ:         ApplicationOctetStream,
 			url:         "/dl-unknown-type",
 		},
 		{
@@ -136,7 +136,7 @@ func TestInline(t *testing.T) {
 		{
 			code:        http.StatusOK,
 			disposition: "inline;filename=readme",
-			typ:         OctetStream,
+			typ:         ApplicationOctetStream,
 			url:         "/dl-unknown-type-inline",
 		},
 	}
@@ -192,7 +192,7 @@ func TestJSON(t *testing.T) {
 	err = JSON(w, http.StatusOK, tst)
 	Equal(t, err, nil)
 	Equal(t, w.Header().Get(ContentType), ApplicationJSON)
-	Equal(t, w.Body.Bytes(), append([]byte(b)))
+	Equal(t, w.Body.Bytes(), b)
 
 	err = JSON(w, http.StatusOK, func() {})
 	NotEqual(t, err, nil)
@@ -210,7 +210,7 @@ func TestJSONBytes(t *testing.T) {
 	err = JSONBytes(w, http.StatusOK, b)
 	Equal(t, err, nil)
 	Equal(t, w.Header().Get(ContentType), ApplicationJSON)
-	Equal(t, w.Body.Bytes(), []byte(b))
+	Equal(t, w.Body.Bytes(), b)
 }
 
 func TestJSONP(t *testing.T) {

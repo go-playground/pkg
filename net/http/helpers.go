@@ -36,7 +36,7 @@ func detectContentType(filename string) string {
 	case ".md":
 		return TextMarkdown
 	default:
-		return OctetStream
+		return ApplicationOctetStream
 	}
 }
 
@@ -100,6 +100,17 @@ func ClientIP(r *http.Request) (clientIP string) {
 	}
 	clientIP, _, _ = net.SplitHostPort(strings.TrimSpace(r.RemoteAddr))
 	return
+}
+
+//
+// JSONStream uses json.Encoder to stream the JSON reponse body.
+//
+// This differs from the JSON helper which unmarshalls into memory first allowing the capture of JSON encoding errors.
+//
+func JSONStream(w http.ResponseWriter, status int, i interface{}) error {
+	w.Header().Set(ContentType, ApplicationJSON)
+	w.WriteHeader(status)
+	return json.NewEncoder(w).Encode(i)
 }
 
 // JSON marshals provided interface + returns JSON + status code
