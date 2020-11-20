@@ -1,4 +1,5 @@
 # pkg
+
 ![Project status](https://img.shields.io/badge/version-5.2.0-green.svg)
 [![Build Status](https://travis-ci.org/go-playground/pkg.svg?branch=master)](https://travis-ci.org/go-playground/pkg)
 [![Coverage Status](https://coveralls.io/repos/github/go-playground/pkg/badge.svg?branch=master)](https://coveralls.io/github/go-playground/pkg?branch=master)
@@ -7,15 +8,18 @@
 
 pkg extends the core Go packages with missing or additional functionality built in. All packages correspond to the std go package name with an additional suffix of `ext` to avoid naming conflicts.
 
-Motivation
-----------
+## Motivation
+
 This is a place to put common reusable code that is not quite a library but extends upon the core library, or it's failings.
 
-How to Contribute
-------
+## Install
+
+`go get -u github.com/go-playground/pkg/v5`
+
+## How to Contribute
 
 Make a pull request... can't guarantee it will be added, going to strictly vet what goes in.
 
-License
-------
+## License
+
 Distributed under MIT License, please see license file within the code for more details.
