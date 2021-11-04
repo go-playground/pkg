@@ -1,5 +1,6 @@
 package bytesext
 
+// Common byte unit sizes
 const (
 	BYTE = 1
 
