@@ -25,7 +25,7 @@ func LimitReader(r io.Reader, n int64) *LimitedReader {
 // that the limit was reached through the returned error.
 type LimitedReader struct {
 	R io.Reader
-	N int64 // bytes alloted
+	N int64 // bytes allotted
 }
 
 func (l *LimitedReader) Read(p []byte) (n int, err error) {
