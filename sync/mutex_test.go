@@ -25,6 +25,8 @@ func TestMutex(t *testing.T) {
 func TestRWMutex(t *testing.T) {
 	m := NewRWMutex(make(map[string]int))
 	m.Lock()["foo"] = 1
+	Equal(t, m.TryLock().IsOk(), false)
+	Equal(t, m.TryRLock().IsOk(), false)
 	m.Unlock()
 
 	m.PerformMut(func(m map[string]int) {
@@ -33,6 +35,7 @@ func TestRWMutex(t *testing.T) {
 
 	myMap := m.RLock()
 	Equal(t, len(myMap), 2)
+	Equal(t, m.TryRLock().IsOk(), true)
 	m.RUnlock()
 
 	m.Perform(func(m map[string]int) {
