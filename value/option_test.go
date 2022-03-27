@@ -53,3 +53,60 @@ func returnTypedNoneOptionPtr() Option[*myStruct] {
 func returnTypedSomeOptionPtr() Option[*myStruct] {
 	return Some(new(myStruct))
 }
+
+func BenchmarkOption(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		opt := returnTypedSomeOption()
+		if opt.IsSome() {
+			_ = opt.Unwrap()
+		}
+	}
+}
+
+func BenchmarkOptionPtr(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		opt := returnTypedSomeOptionPtr()
+		if opt.IsSome() {
+			_ = opt.Unwrap()
+		}
+	}
+}
+
+func BenchmarkNoOptionPtr(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		result := returnTypedNoOption()
+		if result != nil {
+			_ = result
+		}
+	}
+}
+
+func BenchmarkOptionNil(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		opt := returnTypedSomeOptionNil()
+		if opt.IsSome() {
+			_ = opt.Unwrap()
+		}
+	}
+}
+
+func BenchmarkNoOptionNil(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		result, found := returnNoOptionNil()
+		if found {
+			_ = result
+		}
+	}
+}
+
+func returnTypedSomeOptionNil() Option[any] {
+	return Some[any](nil)
+}
+
+func returnTypedNoOption() *myStruct {
+	return new(myStruct)
+}
+
+func returnNoOptionNil() (any, bool) {
+	return nil, true
+}
