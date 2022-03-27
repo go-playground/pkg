@@ -5,4 +5,4 @@ require (
 	github.com/go-playground/form/v4 v4.2.0
 )
 
-go 1.17
+go 1.18
