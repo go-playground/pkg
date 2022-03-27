@@ -216,7 +216,7 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 // The Content-Type e.g. "application/json" and http method are not checked.
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
-// is added to parsed JSON and replaces any value that may have been present
+// is added to parsed JSON and replaces any values that may have been present
 func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	var body io.Reader = r.Body
 	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
@@ -243,7 +243,7 @@ func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interf
 // The Content-Type e.g. "application/xml" and http method are not checked.
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
-// is added to parsed XML and replaces any value that may have been present
+// is added to parsed XML and replaces any values that may have been present
 func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	var body io.Reader = r.Body
 	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
@@ -283,7 +283,7 @@ const (
 // This default to parsing query params if includeQueryParams=true and no other content type matches.
 //
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
-// is added to parsed XML and replaces any value that may have been present
+// is added to parsed XML and replaces any values that may have been present
 func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
 	typ := r.Header.Get(ContentType)
 	if idx := strings.Index(typ, ";"); idx != -1 {

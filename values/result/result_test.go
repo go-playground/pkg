@@ -1,6 +1,7 @@
 //go:build go1.18
+// +build go1.18
 
-package value
+package result
 
 import (
 	"errors"
@@ -8,6 +9,8 @@ import (
 
 	. "github.com/go-playground/assert/v2"
 )
+
+type myStruct struct{}
 
 func TestResult(t *testing.T) {
 	result := returnOk()

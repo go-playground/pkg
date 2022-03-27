@@ -1,6 +1,7 @@
 //go:build go1.18
+// +build go1.18
 
-package value
+package result
 
 // Result represents the result of an operation that is successful or not.
 type Result[T any] struct {
@@ -8,7 +9,7 @@ type Result[T any] struct {
 	err   error
 }
 
-// Ok returns a Result that contains the given value.
+// Ok returns a Result that contains the given values.
 func Ok[T any](value T) Result[T] {
 	return Result[T]{value: value}
 }
@@ -28,7 +29,7 @@ func (r Result[T]) IsErr() bool {
 	return r.err != nil
 }
 
-// Unwrap returns the value of the result. It panics if there is no result due to not checking for errors.
+// Unwrap returns the values of the result. It panics if there is no result due to not checking for errors.
 func (r Result[T]) Unwrap() T {
 	if r.err != nil {
 		panic("Result.Unwrap(): result is Err")

@@ -284,7 +284,7 @@ func TestDecode(t *testing.T) {
 
 	// test Form decode
 	form := url.Values{}
-	form.Add("Posted", "value")
+	form.Add("Posted", "values")
 
 	test = new(TestStruct)
 	r, _ = http.NewRequest(http.MethodPost, "/decode-query?id=13", strings.NewReader(form.Encode()))
@@ -293,7 +293,7 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 13)
-	Equal(t, test.Posted, "value")
+	Equal(t, test.Posted, "values")
 	Equal(t, test.MultiPartPosted, "")
 
 	test = new(TestStruct)
@@ -303,14 +303,14 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 0)
-	Equal(t, test.Posted, "value")
+	Equal(t, test.Posted, "values")
 	Equal(t, test.MultiPartPosted, "")
 
 	// test MultipartForm
 	body := &bytes.Buffer{}
 	writer := multipart.NewWriter(body)
 
-	err := writer.WriteField("MultiPartPosted", "value")
+	err := writer.WriteField("MultiPartPosted", "values")
 	Equal(t, err, nil)
 
 	// Don't forget to close the multipart writer.
@@ -326,12 +326,12 @@ func TestDecode(t *testing.T) {
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 12)
 	Equal(t, test.Posted, "")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.MultiPartPosted, "values")
 
 	body = &bytes.Buffer{}
 	writer = multipart.NewWriter(body)
 
-	err = writer.WriteField("MultiPartPosted", "value")
+	err = writer.WriteField("MultiPartPosted", "values")
 	Equal(t, err, nil)
 
 	// Don't forget to close the multipart writer.
@@ -347,10 +347,10 @@ func TestDecode(t *testing.T) {
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 0)
 	Equal(t, test.Posted, "")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.MultiPartPosted, "values")
 
 	// test JSON
-	jsonBody := `{"ID":13,"Posted":"value","MultiPartPosted":"value"}`
+	jsonBody := `{"ID":13,"Posted":"values","MultiPartPosted":"values"}`
 	test = new(TestStruct)
 	r, _ = http.NewRequest(http.MethodPost, "/decode-query?id=13", strings.NewReader(jsonBody))
 	r.Header.Set(ContentType, ApplicationJSON)
@@ -358,8 +358,8 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 13)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 
 	var buff bytes.Buffer
 	gzw := gzip.NewWriter(&buff)
@@ -380,8 +380,8 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 14)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 
 	test = new(TestStruct)
 	r, _ = http.NewRequest(http.MethodPost, "/decode-noquery?id=14", strings.NewReader(jsonBody))
@@ -390,11 +390,11 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 13)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 
 	// test XML
-	xmlBody := `<TestStruct><ID>13</ID><Posted>value</Posted><MultiPartPosted>value</MultiPartPosted></TestStruct>`
+	xmlBody := `<TestStruct><ID>13</ID><Posted>values</Posted><MultiPartPosted>values</MultiPartPosted></TestStruct>`
 	test = new(TestStruct)
 	r, _ = http.NewRequest(http.MethodPost, "/decode-noquery?id=14", strings.NewReader(xmlBody))
 	r.Header.Set(ContentType, ApplicationXML)
@@ -402,8 +402,8 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 13)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 
 	test = new(TestStruct)
 	r, _ = http.NewRequest(http.MethodPost, "/decode-query?id=14", strings.NewReader(xmlBody))
@@ -412,8 +412,8 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 14)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 
 	buff.Reset()
 	gzw = gzip.NewWriter(&buff)
@@ -434,6 +434,6 @@ func TestDecode(t *testing.T) {
 	mux.ServeHTTP(w, r)
 	Equal(t, w.Code, http.StatusOK)
 	Equal(t, test.ID, 13)
-	Equal(t, test.Posted, "value")
-	Equal(t, test.MultiPartPosted, "value")
+	Equal(t, test.Posted, "values")
+	Equal(t, test.MultiPartPosted, "values")
 }
