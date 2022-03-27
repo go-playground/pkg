@@ -28,10 +28,54 @@ func TestResult(t *testing.T) {
 	}, "Result.Unwrap(): result is Err")
 }
 
-func returnOk() Result[myStruct] {
-	return Ok(myStruct{})
+func returnOk() Result[myStruct, error] {
+	return Ok[myStruct, error](myStruct{})
 }
 
-func returnErr() Result[myStruct] {
-	return Err[myStruct](errors.New("bad"))
+func returnErr() Result[myStruct, error] {
+	return Err[myStruct, error](errors.New("bad"))
+}
+
+func BenchmarkResultOk(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		res := returnOk()
+		if res.IsOk() {
+			_ = res.Unwrap()
+		}
+	}
+}
+
+func BenchmarkResultErr(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		res := returnErr()
+		if res.IsOk() {
+			_ = res.Unwrap()
+		}
+	}
+}
+
+func BenchmarkNoResultOk(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		res, err := returnOkNoResult()
+		if err != nil {
+			_ = res
+		}
+	}
+}
+
+func BenchmarkNoResultErr(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		res, err := returnErrNoResult()
+		if err != nil {
+			_ = res
+		}
+	}
+}
+
+func returnOkNoResult() (myStruct, error) {
+	return myStruct{}, nil
+}
+
+func returnErrNoResult() (myStruct, error) {
+	return myStruct{}, errors.New("bad")
 }
