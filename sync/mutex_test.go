@@ -4,6 +4,8 @@ package sync
 
 import (
 	"testing"
+
+	. "github.com/go-playground/assert/v2"
 )
 
 func TestMutex(t *testing.T) {
@@ -11,10 +13,12 @@ func TestMutex(t *testing.T) {
 	m.Lock()["foo"] = 1
 	m.Unlock()
 
+	m.PerformMut(func(m map[string]int) {
+		m["boo"] = 1
+	})
+
 	myMap := m.Lock()
-	if len(myMap) != 1 {
-		t.Errorf("Expected map to have 1 element, got %d", len(myMap))
-	}
+	Equal(t, 2, len(myMap))
 	m.Unlock()
 }
 
@@ -23,9 +27,16 @@ func TestRWMutex(t *testing.T) {
 	m.Lock()["foo"] = 1
 	m.Unlock()
 
+	m.PerformMut(func(m map[string]int) {
+		m["boo"] = 2
+	})
+
 	myMap := m.RLock()
-	if len(myMap) != 1 {
-		t.Errorf("Expected map to have 1 element, got %d", len(myMap))
-	}
+	Equal(t, len(myMap), 2)
 	m.RUnlock()
+
+	m.Perform(func(m map[string]int) {
+		Equal(t, 1, m["foo"])
+		Equal(t, 2, m["boo"])
+	})
 }

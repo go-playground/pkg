@@ -20,6 +20,15 @@ type Mutex[T any] struct {
 	value T
 }
 
+// PerformMut safely locks and unlocks the Mutex value and performs the provided function.
+//
+// Too bad Go doesn't support PerformMut[R any](func(T) R) R syntax :(
+func (m *Mutex[T]) PerformMut(f func(T)) {
+	m.Lock()
+	defer m.Unlock()
+	f(m.value)
+}
+
 // Lock locks Mutex and returns value for mutable use.
 func (m *Mutex[T]) Lock() T {
 	m.m.Lock()
@@ -45,6 +54,15 @@ type RWMutex[T any] struct {
 	value T
 }
 
+// PerformMut safely locks and unlocks the RWMutex mutable value and performs the provided function.
+//
+// Too bad Go doesn't support PerformMut[R any](func(T) R) R syntax :(
+func (m *RWMutex[T]) PerformMut(f func(T)) {
+	m.Lock()
+	defer m.Unlock()
+	f(m.value)
+}
+
 // Lock locks mutex and returns value for mutable use.
 func (m *RWMutex[T]) Lock() T {
 	m.rw.Lock()
@@ -54,6 +72,15 @@ func (m *RWMutex[T]) Lock() T {
 // Unlock unlocks mutable lock for value.
 func (m *RWMutex[T]) Unlock() {
 	m.rw.Unlock()
+}
+
+// Perform safely locks and unlocks the RWMutex read-only value and performs the provided function.
+//
+// Too bad Go doesn't support Perform[R any](func(T) R) R syntax :(
+func (m *RWMutex[T]) Perform(f func(T)) {
+	m.RLock()
+	defer m.RUnlock()
+	f(m.value)
 }
 
 // Lock locks mutex and returns value for read-only use.
