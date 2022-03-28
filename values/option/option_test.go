@@ -4,7 +4,9 @@
 package option
 
 import (
+	"encoding/json"
 	"testing"
+	"time"
 
 	. "github.com/go-playground/assert/v2"
 )
@@ -35,6 +37,43 @@ func TestNilOption(t *testing.T) {
 	Equal(t, false, retPtr.IsNone())
 	Equal(t, true, retPtr.IsSome())
 	Equal(t, new(myStruct), retPtr.Unwrap())
+}
+
+func TestOptionJSON(t *testing.T) {
+	type s struct {
+		Timestamp Option[time.Time] `json:"ts"`
+	}
+	now := time.Now().UTC().Truncate(time.Minute)
+	tv := s{Timestamp: Some(now)}
+
+	b, err := json.Marshal(tv)
+	Equal(t, nil, err)
+	Equal(t, `{"ts":"`+now.Format(time.RFC3339)+`"}`, string(b))
+
+	tv = s{}
+	b, err = json.Marshal(tv)
+	Equal(t, nil, err)
+	Equal(t, `{"ts":null}`, string(b))
+}
+
+func TestOptionJSONOmitempty(t *testing.T) {
+	type s struct {
+		Timestamp Option[time.Time] `json:"ts,omitempty"`
+	}
+	now := time.Now().UTC().Truncate(time.Minute)
+	tv := s{Timestamp: Some(now)}
+
+	b, err := json.Marshal(tv)
+	Equal(t, nil, err)
+	Equal(t, `{"ts":"`+now.Format(time.RFC3339)+`"}`, string(b))
+
+	type s2 struct {
+		Timestamp *Option[time.Time] `json:"ts,omitempty"`
+	}
+	tv2 := &s2{}
+	b, err = json.Marshal(tv2)
+	Equal(t, nil, err)
+	Equal(t, `{}`, string(b))
 }
 
 type myStruct struct{}
