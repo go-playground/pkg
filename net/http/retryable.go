@@ -11,6 +11,7 @@ var (
 		http.StatusTooManyRequests:    true,
 		http.StatusBadGateway:         true,
 		http.StatusGatewayTimeout:     true,
+		http.StatusRequestTimeout:     true,
 
 		// 524 is a Cloudflare specific error which indicates it connected to the origin server but did not receive
 		// response within 100 seconds and so times out.
