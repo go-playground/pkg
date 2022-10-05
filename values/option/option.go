@@ -1,7 +1,7 @@
 //go:build go1.18
 // +build go1.18
 
-package option
+package optionext
 
 import (
 	"database/sql"
@@ -17,7 +17,6 @@ import (
 // nil is usually used on Go however this has two problems:
 // 1. Checking if the return values is nil is NOT enforced and can lead to panics.
 // 2. Using nil is not good enough when nil itself is a valid values.
-//
 type Option[T any] struct {
 	value  T
 	isSome bool

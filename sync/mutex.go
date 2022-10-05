@@ -1,11 +1,11 @@
 //go:build go1.18
 
-package sync
+package syncext
 
 import (
 	"sync"
 
-	"github.com/go-playground/pkg/v5/values/result"
+	resultext "github.com/go-playground/pkg/v5/values/result"
 )
 
 // NewMutex creates a new Mutex for use.
@@ -45,11 +45,11 @@ func (m *Mutex[T]) Unlock() {
 
 // TryLock tries to lock Mutex and reports whether it succeeded.
 // If it does the value is returned for use in the Ok result otherwise Err with empty value.
-func (m *Mutex[T]) TryLock() result.Result[T, struct{}] {
+func (m *Mutex[T]) TryLock() resultext.Result[T, struct{}] {
 	if m.m.TryLock() {
-		return result.Ok[T, struct{}](m.value)
+		return resultext.Ok[T, struct{}](m.value)
 	} else {
-		return result.Err[T, struct{}](struct{}{})
+		return resultext.Err[T, struct{}](struct{}{})
 	}
 }
 
@@ -89,11 +89,11 @@ func (m *RWMutex[T]) Unlock() {
 
 // TryLock tries to lock RWMutex and returns the value in the Ok result if successful.
 // If it does the value is returned for use in the Ok result otherwise Err with empty value.
-func (m *RWMutex[T]) TryLock() result.Result[T, struct{}] {
+func (m *RWMutex[T]) TryLock() resultext.Result[T, struct{}] {
 	if m.rw.TryLock() {
-		return result.Ok[T, struct{}](m.value)
+		return resultext.Ok[T, struct{}](m.value)
 	} else {
-		return result.Err[T, struct{}](struct{}{})
+		return resultext.Err[T, struct{}](struct{}{})
 	}
 }
 
@@ -121,10 +121,10 @@ func (m *RWMutex[T]) RUnlock() {
 
 // TryRLock tries to lock RWMutex for reading and returns the value in the Ok result if successful.
 // If it does the value is returned for use in the Ok result otherwise Err with empty value.
-func (m *RWMutex[T]) TryRLock() result.Result[T, struct{}] {
+func (m *RWMutex[T]) TryRLock() resultext.Result[T, struct{}] {
 	if m.rw.TryRLock() {
-		return result.Ok[T, struct{}](m.value)
+		return resultext.Ok[T, struct{}](m.value)
 	} else {
-		return result.Err[T, struct{}](struct{}{})
+		return resultext.Err[T, struct{}](struct{}{})
 	}
 }
