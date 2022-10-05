@@ -16,7 +16,7 @@ import (
 //
 // nil is usually used on Go however this has two problems:
 // 1. Checking if the return values is nil is NOT enforced and can lead to panics.
-// 2. Using nil is not good enough when nil itself is a valid values.
+// 2. Using nil is not good enough when nil itself is a valid value.
 type Option[T any] struct {
 	value  T
 	isSome bool
