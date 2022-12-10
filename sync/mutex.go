@@ -3,6 +3,7 @@
 package syncext
 
 import (
+	optionext "github.com/go-playground/pkg/v5/values/option"
 	"sync"
 
 	resultext "github.com/go-playground/pkg/v5/values/result"
@@ -22,25 +23,39 @@ type Mutex[T any] struct {
 	value T
 }
 
-// PerformMut safely locks and unlocks the Mutex values and performs the provided function.
+// Lock locks the Mutex and returns value for use, safe for mutation if
 //
-// Too bad Go doesn't support PerformMut[R any](func(T) R) R syntax :(
-func (m *Mutex[T]) PerformMut(f func(T)) {
-	m.Lock()
-	defer m.Unlock()
-	f(m.value)
-}
-
-// Lock locks the Mutex and returns value for mutable use.
 // If the lock is already in use, the calling goroutine blocks until the mutex is available.
 func (m *Mutex[T]) Lock() T {
 	m.m.Lock()
 	return m.value
 }
 
-// Unlock unlocks the Mutex. It is a run-time error if the Mutex is not locked on entry to Unlock.
-func (m *Mutex[T]) Unlock() {
+// Unlock unlocks the Mutex accepting a value to set as the new or mutated value.
+// It is optional to pass a new value to be set but NOT required for there reasons:
+// 1. If the internal value is already mutable then no need to set as changes apply as they happen.
+// 2. If there's a failure working with the locked value you may NOT want to set it, but still unlock.
+// 3. Supports locked values that are not mutable.
+//
+// It is a run-time error if the Mutex is not locked on entry to Unlock.
+func (m *Mutex[T]) Unlock(value optionext.Option[T]) {
+	if value.IsSome() {
+		m.value = value.Unwrap()
+	}
 	m.m.Unlock()
+}
+
+// PerformMut safely locks and unlocks the Mutex values and performs the provided function returning its error if one
+// otherwise setting the returned value as the new mutex value.
+func (m *Mutex[T]) PerformMut(f func(T) (T, error)) error {
+	value := m.Lock()
+	result, err := f(value)
+	if err != nil {
+		m.Unlock(optionext.None[T]())
+		return err
+	}
+	m.Unlock(optionext.Some(result))
+	return nil
 }
 
 // TryLock tries to lock Mutex and reports whether it succeeded.
@@ -67,24 +82,38 @@ type RWMutex[T any] struct {
 	value T
 }
 
-// PerformMut safely locks and unlocks the RWMutex mutable values and performs the provided function.
+// Lock locks the Mutex and returns value for use, safe for mutation if
 //
-// Too bad Go doesn't support PerformMut[R any](func(T) R) R syntax :(
-func (m *RWMutex[T]) PerformMut(f func(T)) {
-	m.Lock()
-	defer m.Unlock()
-	f(m.value)
-}
-
-// Lock locks mutex and returns values for mutable use.
+// If the lock is already in use, the calling goroutine blocks until the mutex is available.
 func (m *RWMutex[T]) Lock() T {
 	m.rw.Lock()
 	return m.value
 }
 
-// Unlock unlocks mutable lock for values.
-func (m *RWMutex[T]) Unlock() {
+// Unlock unlocks the Mutex accepting a value to set as the new or mutated value.
+// It is optional to pass a new value to be set but NOT required for there reasons:
+// 1. If the internal value is already mutable then no need to set as changes apply as they happen.
+// 2. If there's a failure working with the locked value you may NOT want to set it, but still unlock.
+// 3. Supports locked values that are not mutable.
+//
+// It is a run-time error if the Mutex is not locked on entry to Unlock.
+func (m *RWMutex[T]) Unlock(value optionext.Option[T]) {
+	if value.IsSome() {
+		m.value = value.Unwrap()
+	}
 	m.rw.Unlock()
+}
+
+// PerformMut safely locks and unlocks the RWMutex mutable values and performs the provided function.
+func (m *RWMutex[T]) PerformMut(f func(T) (T, error)) error {
+	value := m.Lock()
+	result, err := f(value)
+	if err != nil {
+		m.Unlock(optionext.None[T]())
+		return err
+	}
+	m.Unlock(optionext.Some(result))
+	return nil
 }
 
 // TryLock tries to lock RWMutex and returns the value in the Ok result if successful.
@@ -98,12 +127,15 @@ func (m *RWMutex[T]) TryLock() resultext.Result[T, struct{}] {
 }
 
 // Perform safely locks and unlocks the RWMutex read-only values and performs the provided function.
-//
-// Too bad Go doesn't support Perform[R any](func(T) R) R syntax :(
-func (m *RWMutex[T]) Perform(f func(T)) {
-	m.RLock()
-	defer m.RUnlock()
-	f(m.value)
+func (m *RWMutex[T]) Perform(f func(T) error) error {
+	result := m.RLock()
+	err := f(result)
+	if err != nil {
+		m.RUnlock()
+		return err
+	}
+	m.RUnlock()
+	return nil
 }
 
 // RLock locks the RWMutex for reading and returns the value for read-only use.
