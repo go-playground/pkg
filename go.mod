@@ -1,6 +1,6 @@
 module github.com/go-playground/pkg/v5
 
-go 1.19
+go 1.18
 
 require (
 	github.com/go-playground/assert/v2 v2.2.0
