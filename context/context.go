@@ -38,7 +38,7 @@ func (c detachedContext) Err() error {
 	return nil
 }
 
-func (c detachedContext) Value(key any) interface{} {
+func (c detachedContext) Value(key interface{}) interface{} {
 	return c.parent.Value(key)
 }
 
