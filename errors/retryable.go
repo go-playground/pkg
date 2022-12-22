@@ -84,6 +84,9 @@ func IsTemporaryConnection(err error) (retryType string, isRetryable bool) {
 		if errors.Is(err, syscall.EINTR) {
 			return "eintr", true
 		}
+		if errors.Is(err, syscall.EPIPE) {
+			return "epipe", true
+		}
 	}
 	return "", false
 }
