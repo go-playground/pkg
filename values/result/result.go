@@ -32,10 +32,10 @@ func (r Result[T, E]) IsErr() bool {
 
 // Unwrap returns the values of the result. It panics if there is no result due to not checking for errors.
 func (r Result[T, E]) Unwrap() T {
-	if !r.isOk {
-		panic("Result.Unwrap(): result is Err")
+	if r.isOk {
+		return r.ok
 	}
-	return r.ok
+	panic("Result.Unwrap(): result is Err")
 }
 
 // Err returns the error of the result. To be used after calling IsOK()

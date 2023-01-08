@@ -34,10 +34,10 @@ func (o Option[T]) IsNone() bool {
 
 // Unwrap returns the values if the option is not empty or panics.
 func (o Option[T]) Unwrap() T {
-	if o.IsNone() {
-		panic("Option.Unwrap: option is None")
+	if o.isSome {
+		return o.value
 	}
-	return o.value
+	panic("Option.Unwrap: option is None")
 }
 
 // Some creates a new Option with the given values.
@@ -52,10 +52,10 @@ func None[T any]() Option[T] {
 
 // MarshalJSON implements the json.Marshaler interface.
 func (o Option[T]) MarshalJSON() ([]byte, error) {
-	if o.IsNone() {
-		return []byte("null"), nil
+	if o.isSome {
+		return json.Marshal(o.value)
 	}
-	return json.Marshal(o.value)
+	return []byte("null"), nil
 }
 
 // UnmarshalJSON implements the json.Unmarshaler interface.
@@ -75,10 +75,10 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 
 // Value implements the driver.Valuer interface.
 func (o *Option[T]) Value() (driver.Value, error) {
-	if o.IsNone() {
-		return nil, nil
+	if o.isSome {
+		return o.Unwrap(), nil
 	}
-	return o.Unwrap(), nil
+	return nil, nil
 }
 
 // Scan implements the sql.Scanner interface.
