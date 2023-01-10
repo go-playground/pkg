@@ -27,7 +27,7 @@ func (r Result[T, E]) IsOk() bool {
 
 // IsErr returns true if the result is not successful and has an error.
 func (r Result[T, E]) IsErr() bool {
-	return !r.IsOk()
+	return !r.isOk
 }
 
 // Unwrap returns the values of the result. It panics if there is no result due to not checking for errors.

@@ -74,7 +74,7 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 }
 
 // Value implements the driver.Valuer interface.
-func (o *Option[T]) Value() (driver.Value, error) {
+func (o Option[T]) Value() (driver.Value, error) {
 	if o.isSome {
 		return o.Unwrap(), nil
 	}
