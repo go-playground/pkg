@@ -27,8 +27,8 @@ func TestRetain(t *testing.T) {
 }
 
 func TestMap(t *testing.T) {
-	s := Map[int, string]([]int{0, 1, 2, 3}, func(v int) string {
-		return strconv.Itoa(v)
+	s := Map[int, []string]([]int{0, 1, 2, 3}, make([]string, 0, 4), func(accum []string, v int) []string {
+		return append(accum, strconv.Itoa(v))
 	})
 	Equal(t, len(s), 4)
 	Equal(t, s[0], "0")
@@ -37,8 +37,8 @@ func TestMap(t *testing.T) {
 	Equal(t, s[3], "3")
 
 	// Test Map empty slice
-	s2 := Map[int, string](nil, func(v int) string {
-		return strconv.Itoa(v)
+	s2 := Map[int, []string](nil, nil, func(accum []string, v int) []string {
+		return append(accum, strconv.Itoa(v))
 	})
 	Equal(t, len(s2), 0)
 }

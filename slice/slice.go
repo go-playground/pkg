@@ -35,15 +35,15 @@ func Filter[T any](slice []T, fn func(v T) bool) []T {
 }
 
 // Map maps a slice of []T -> []U using the map function.
-func Map[T, U any](slice []T, fn func(v T) U) (results []U) {
+func Map[T, U any](slice []T, init U, fn func(accum U, v T) U) U {
 	if len(slice) == 0 {
-		return nil
+		return init
 	}
-	results = make([]U, 0, len(slice))
+	accum := init
 	for _, v := range slice {
-		results = append(results, fn(v))
+		accum = fn(accum, v)
 	}
-	return
+	return accum
 }
 
 // Sort sorts the sliceWrapper x given the provided less function.
