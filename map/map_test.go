@@ -12,8 +12,8 @@ func TestRetain(t *testing.T) {
 		"2": 2,
 		"3": 3,
 	}
-	Retain(m, func(entry Entry[string, int]) bool {
-		return entry.Value < 1 || entry.Value > 2
+	Retain(m, func(key string, value int) bool {
+		return value < 1 || value > 2
 	})
 	Equal(t, len(m), 2)
 	Equal(t, m["0"], 0)
