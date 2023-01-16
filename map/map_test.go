@@ -5,6 +5,7 @@ package mapext
 
 import (
 	. "github.com/go-playground/assert/v2"
+	"sort"
 	"testing"
 )
 
@@ -31,6 +32,9 @@ func TestMap(t *testing.T) {
 	}
 	slice := Map(m, make([]int, 0, len(m)), func(accum []int, key string, value int) []int {
 		return append(accum, value)
+	})
+	sort.SliceStable(slice, func(i, j int) bool {
+		return i < j
 	})
 	Equal(t, len(slice), 2)
 	Equal(t, slice[0], 0)
