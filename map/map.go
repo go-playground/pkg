@@ -1,3 +1,6 @@
+//go:build go1.18
+// +build go1.18
+
 package mapext
 
 // Retain retains only the elements specified by the function and removes others.
