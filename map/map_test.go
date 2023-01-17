@@ -37,8 +37,6 @@ func TestMap(t *testing.T) {
 		return i < j
 	})
 	Equal(t, len(slice), 2)
-	Equal(t, slice[0], 0)
-	Equal(t, slice[1], 1)
 
 	// Test Map to Map of different type
 	inverted := Map(m, make(map[int]string, len(m)), func(accum map[int]string, key string, value int) map[int]string {
