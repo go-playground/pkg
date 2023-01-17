@@ -6,4 +6,7 @@ test:
 bench:
 	$(GOCMD) test -run=NONE -bench=. -benchmem  ./...
 
-.PHONY: linters-install lint test bench
+lint:
+	golangci-lint run
+
+.PHONY: lint test bench
