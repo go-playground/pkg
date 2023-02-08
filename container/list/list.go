@@ -1,3 +1,6 @@
+//go:build go1.18
+// +build go1.18
+
 package listext
 
 // Node is an element of the doubly linked list.
