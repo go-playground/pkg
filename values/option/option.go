@@ -170,7 +170,7 @@ func (o *Option[T]) Scan(value any) error {
 		}
 		fallthrough
 	default:
-		return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", value, o.value)
+		return fmt.Errorf("unsupported Scan, storing driver.value type %T into type %T", value, o.value)
 	}
 	return nil
 }
