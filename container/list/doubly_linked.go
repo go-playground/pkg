@@ -65,7 +65,11 @@ func (d *DoublyLinkedList[V]) PopFront() *Node[V] {
 
 	node := d.head
 	d.head = node.next
-	d.head.prev = nil
+	if d.head == nil {
+		d.tail = nil
+	} else {
+		d.head.prev = nil
+	}
 	d.len--
 	// ensure no leakage
 	node.next, node.prev = nil, nil
@@ -102,7 +106,12 @@ func (d *DoublyLinkedList[V]) PopBack() *Node[V] {
 
 	node := d.tail
 	d.tail = node.prev
-	d.tail.next = nil
+
+	if d.tail == nil {
+		d.head = nil
+	} else {
+		d.tail.next = nil
+	}
 	d.len--
 	// ensure no leakage
 	node.next, node.prev = nil, nil
@@ -133,11 +142,12 @@ func (d *DoublyLinkedList[V]) Remove(node *Node[V]) {
 		// is tail node
 		_ = d.PopBack()
 	} else {
-		// is no head nor tail nodes, must remap
+		// is both head and tail nodes, must remap
 		node.next.prev = node.prev
 		node.prev.next = node.next
 		// ensure no leakage
 		node.next, node.prev = nil, nil
+		d.len--
 	}
 }
 
