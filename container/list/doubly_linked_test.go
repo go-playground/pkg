@@ -125,6 +125,12 @@ func TestTripleEntryPopBack(t *testing.T) {
 	Equal(t, twoNode.Next().Value(), 1)
 	Equal(t, twoNode.Next().Next().Value(), 0)
 	Equal(t, twoNode.Next().Next().Next(), nil)
+
+	// remove front
+	l.Remove(twoNode)
+
+	// remove back
+	l.Remove(zeroNode)
 }
 
 func TestLinkedList(t *testing.T) {
@@ -162,6 +168,16 @@ func TestLinkedList(t *testing.T) {
 	Equal(t, oneNode.Value(), 1)
 	Equal(t, oneNode.Prev(), nil)
 	Equal(t, oneNode.Next(), nil)
+
+	// move to front
+	l.MoveToFront(zeroNode)
+	Equal(t, l.Front().Value(), 0)
+	Equal(t, l.Back().Value(), 2)
+
+	// move to back
+	l.MoveToBack(zeroNode)
+	Equal(t, l.Front().Value(), 2)
+	Equal(t, l.Back().Value(), 0)
 
 	// test clearing
 	l.Clear()
