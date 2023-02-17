@@ -133,7 +133,7 @@ func TestTripleEntryPopBack(t *testing.T) {
 	l.Remove(zeroNode)
 }
 
-func TestLinkedList(t *testing.T) {
+func TestLinkedListPushFront(t *testing.T) {
 
 	l := NewDoublyLinked[int]()
 	Equal(t, l.IsEmpty(), true)
@@ -178,6 +178,58 @@ func TestLinkedList(t *testing.T) {
 	l.MoveToBack(zeroNode)
 	Equal(t, l.Front().Value(), 2)
 	Equal(t, l.Back().Value(), 0)
+
+	// test clearing
+	l.Clear()
+	Equal(t, l.IsEmpty(), true)
+	Equal(t, l.Len(), 0)
+}
+
+func TestLinkedListPushBack(t *testing.T) {
+
+	l := NewDoublyLinked[int]()
+	Equal(t, l.IsEmpty(), true)
+	Equal(t, l.Len(), 0)
+
+	// push some data and then re-check
+	zeroNode := l.PushBack(0)
+	oneNode := l.PushBack(1)
+	twoNode := l.PushBack(2)
+	Equal(t, l.IsEmpty(), false)
+	Equal(t, l.Len(), 3)
+
+	// test next logic
+	Equal(t, zeroNode.Value(), 0)
+	Equal(t, zeroNode.Next().Value(), 1)
+	Equal(t, zeroNode.Next().Next().Value(), 2)
+	Equal(t, zeroNode.Next().Next().Next(), nil)
+	Equal(t, zeroNode.Prev(), nil)
+	Equal(t, oneNode.Value(), 1)
+	Equal(t, oneNode.Next().Value(), 2)
+	Equal(t, oneNode.Next().Next(), nil)
+	Equal(t, oneNode.Prev().Value(), 0)
+	Equal(t, oneNode.Prev().Prev(), nil)
+	Equal(t, twoNode.Value(), 2)
+	Equal(t, twoNode.Prev().Value(), 1)
+	Equal(t, twoNode.Prev().Prev().Value(), 0)
+	Equal(t, twoNode.Prev().Prev().Prev(), nil)
+	Equal(t, twoNode.Next(), nil)
+
+	// remove middle node and test again
+	l.Remove(oneNode)
+	Equal(t, oneNode.Value(), 1)
+	Equal(t, oneNode.Prev(), nil)
+	Equal(t, oneNode.Next(), nil)
+
+	// move to front
+	l.MoveToBack(zeroNode)
+	Equal(t, l.Front().Value(), 2)
+	Equal(t, l.Back().Value(), 0)
+
+	// move to back
+	l.MoveToFront(zeroNode)
+	Equal(t, l.Front().Value(), 0)
+	Equal(t, l.Back().Value(), 2)
 
 	// test clearing
 	l.Clear()
