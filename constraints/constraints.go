@@ -1,3 +1,6 @@
+//go:build go1.18
+// +build go1.18
+
 package constraintsext
 
 // Number represents any non-complex number eg. Integer and Float.
