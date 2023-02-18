@@ -6,20 +6,15 @@ package listext
 // Node is an element of the doubly linked list.
 type Node[V any] struct {
 	next, prev *Node[V]
-	value      V
+	Value      V
 }
 
-// Value returns the underlying nodes value.
-func (n *Node[V]) Value() V {
-	return n.value
-}
-
-// Next returns the nodes next value or nil if it is at the tail.
+// Next returns the nodes next Value or nil if it is at the tail.
 func (n *Node[V]) Next() *Node[V] {
 	return n.next
 }
 
-// Prev returns the nodes previous value or nil if it is at the head.
+// Prev returns the nodes previous Value or nil if it is at the head.
 func (n *Node[V]) Prev() *Node[V] {
 	return n.prev
 }
@@ -38,7 +33,7 @@ func NewDoublyLinked[V any]() *DoublyLinkedList[V] {
 // PushFront adds an element first in the list.
 func (d *DoublyLinkedList[V]) PushFront(v V) *Node[V] {
 	node := &Node[V]{
-		value: v,
+		Value: v,
 	}
 	d.pushFront(node)
 	return d.head
@@ -79,7 +74,7 @@ func (d *DoublyLinkedList[V]) PopFront() *Node[V] {
 // PushBack appends an element to the back of a list.
 func (d *DoublyLinkedList[V]) PushBack(v V) *Node[V] {
 	node := &Node[V]{
-		value: v,
+		Value: v,
 	}
 	d.pushBack(node)
 	return d.tail
@@ -98,12 +93,12 @@ func (d *DoublyLinkedList[V]) pushBack(node *Node[V]) {
 	d.len++
 }
 
-// PushAfter pushes the supplied value after the supplied node.
+// PushAfter pushes the supplied Value after the supplied node.
 //
 // The supplied node must be attached to the current list otherwise undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) PushAfter(node *Node[V], v V) *Node[V] {
 	newNode := &Node[V]{
-		value: v,
+		Value: v,
 	}
 	d.MoveAfter(node, newNode)
 	return newNode
@@ -130,12 +125,12 @@ func (d *DoublyLinkedList[V]) MoveAfter(node *Node[V], moving *Node[V]) {
 	}
 }
 
-// PushBefore pushes the supplied value before the supplied node.
+// PushBefore pushes the supplied Value before the supplied node.
 //
 // The supplied node must be attached to the current list otherwise undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) PushBefore(node *Node[V], v V) *Node[V] {
 	newNode := &Node[V]{
-		value: v,
+		Value: v,
 	}
 	d.MoveBefore(node, newNode)
 	return newNode
