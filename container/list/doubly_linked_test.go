@@ -4,6 +4,7 @@
 package listext
 
 import (
+	"container/list"
 	. "github.com/go-playground/assert/v2"
 	"testing"
 )
@@ -365,4 +366,21 @@ func TestLinkedListMoving(t *testing.T) {
 	l.Clear()
 	Equal(t, l.IsEmpty(), true)
 	Equal(t, l.Len(), 0)
+}
+
+func BenchmarkDoublyLinkedList(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		l := NewDoublyLinked[int]()
+		node := l.PushBack(0)
+		l.Remove(node)
+		_ = node.Value()
+	}
+}
+
+func BenchmarkDoublyLinkedList_STD(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		l := list.New()
+		node := l.PushBack(0)
+		_ = l.Remove(node)
+	}
 }
