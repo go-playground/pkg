@@ -1,6 +1,6 @@
 # pkg
 
-![Project status](https://img.shields.io/badge/version-5.11.0-green.svg)
+![Project status](https://img.shields.io/badge/version-5.12.0-green.svg)
 [![Build Status](https://travis-ci.org/go-playground/pkg.svg?branch=master)](https://travis-ci.org/go-playground/pkg)
 [![Coverage Status](https://coveralls.io/repos/github/go-playground/pkg/badge.svg?branch=master)](https://coveralls.io/github/go-playground/pkg?branch=master)
 [![GoDoc](https://godoc.org/github.com/go-playground/pkg?status.svg)](https://pkg.go.dev/mod/github.com/go-playground/pkg/v5)
@@ -15,6 +15,19 @@ This is a place to put common reusable code that is not quite a library but exte
 ## Install
 
 `go get -u github.com/go-playground/pkg/v5`
+
+
+## Highlights
+- Generic Doubly Linked List.
+- Result & Option types
+- Generic Mutex and RWMutex.
+- Bytes helper placeholders units eg. MB, MiB, GB, ...
+- Detachable context.
+- Error retryable helper functions.
+- Proper RFC3339Nano definition.
+- unsafe []byte->string & string->[]byte helper functions.
+- HTTP helper functions and constant placeholders.
+- And much, much more.
 
 ## How to Contribute
 
