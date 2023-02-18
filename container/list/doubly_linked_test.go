@@ -368,6 +368,24 @@ func TestLinkedListMoving(t *testing.T) {
 	Equal(t, l.Len(), 0)
 }
 
+func TestLinkedListRemoveSingleEntry(t *testing.T) {
+
+	l := NewDoublyLinked[int]()
+	Equal(t, l.IsEmpty(), true)
+	Equal(t, l.Len(), 0)
+
+	// test pushing after with one node
+	node := l.PushFront(0)
+	Equal(t, l.IsEmpty(), false)
+	Equal(t, l.Len(), 1)
+	Equal(t, l.Front().Value, node.Value)
+	Equal(t, l.Back().Value, node.Value)
+
+	l.Remove(node)
+	Equal(t, l.IsEmpty(), true)
+	Equal(t, l.Len(), 0)
+}
+
 func BenchmarkDoublyLinkedList(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		l := NewDoublyLinked[int]()
