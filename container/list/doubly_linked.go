@@ -106,8 +106,8 @@ func (d *DoublyLinkedList[V]) PushAfter(node *Node[V], v V) *Node[V] {
 
 // MoveAfter moves the `moving` node after the supplied `node`.
 //
-// The supplied `node` must be attached to the current list and the `moving` node must either be attached to the
-// current list or not attached to any other otherwise undefined behaviour could occur.
+// The supplied `node` and `moving` nodes must be attached to the current list otherwise
+// undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) MoveAfter(node *Node[V], moving *Node[V]) {
 	// first detach node were moving after, in case it was already attached somewhere else in the list.
 	d.Remove(moving)
@@ -142,8 +142,8 @@ func (d *DoublyLinkedList[V]) PushBefore(node *Node[V], v V) *Node[V] {
 
 // MoveBefore moves the `moving` node before the supplied `node`.
 //
-// The supplied `node` must be attached to the current list and the `moving` node must either be attached to the
-// current list or not attached to any other otherwise undefined behaviour could occur.
+// The supplied `node` and `moving` nodes must be attached to the current list otherwise
+// undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) MoveBefore(node *Node[V], moving *Node[V]) {
 	// first detach node were moving after, in case it was already attached somewhere else in the list.
 	d.Remove(moving)
@@ -216,12 +216,16 @@ func (d *DoublyLinkedList[V]) Remove(node *Node[V]) {
 }
 
 // MoveToFront moves the provided node to the front/head.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) MoveToFront(node *Node[V]) {
 	d.Remove(node)
 	d.pushFront(node)
 }
 
 // MoveToBack moves the provided node to the end/tail.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) MoveToBack(node *Node[V]) {
 	d.Remove(node)
 	d.pushBack(node)
