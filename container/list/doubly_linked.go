@@ -140,6 +140,20 @@ func (d *DoublyLinkedList[V]) PushBefore(node *Node[V], v V) *Node[V] {
 	return newNode
 }
 
+// InsertBefore inserts the supplied node before the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertBefore(node *Node[V], inserting *Node[V]) {
+	d.moveBefore(node, inserting)
+}
+
+// InsertAfter inserts the supplied node after the supplied node.
+//
+// The supplied node must be attached to the current list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertAfter(node *Node[V], inserting *Node[V]) {
+	d.moveAfter(node, inserting)
+}
+
 // MoveBefore moves the `moving` node before the supplied `node`.
 //
 // The supplied `node` and `moving` nodes must be attached to the current list otherwise
@@ -223,11 +237,25 @@ func (d *DoublyLinkedList[V]) MoveToFront(node *Node[V]) {
 	d.pushFront(node)
 }
 
+// InsertAtFront pushes the provided node to the front/head.
+//
+// The supplied node must not be attached to any list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertAtFront(node *Node[V]) {
+	d.pushFront(node)
+}
+
 // MoveToBack moves the provided node to the end/tail.
 //
 // The supplied node must be attached to the current list otherwise undefined behaviour could occur.
 func (d *DoublyLinkedList[V]) MoveToBack(node *Node[V]) {
 	d.Remove(node)
+	d.pushBack(node)
+}
+
+// InsertAtBack pushes the provided node to the back/tail.
+//
+// The supplied node must not be attached to any list otherwise undefined behaviour could occur.
+func (d *DoublyLinkedList[V]) InsertAtBack(node *Node[V]) {
 	d.pushBack(node)
 }
 
