@@ -9,6 +9,32 @@ import (
 	"testing"
 )
 
+func TestLinkedListInserts(t *testing.T) {
+	l := NewDoublyLinked[int]()
+	Equal(t, l.IsEmpty(), true)
+	Equal(t, l.Len(), 0)
+
+	node1 := l.PushFront(1)
+	node2 := l.PushFront(2)
+	node3 := l.PushFront(3)
+
+	l.Remove(node2)
+	l.InsertAtFront(node2)
+	Equal(t, l.Front().Value, node2.Value)
+
+	l.Remove(node2)
+	l.InsertAtBack(node2)
+	Equal(t, l.Back().Value, node2.Value)
+
+	l.Remove(node2)
+	l.InsertBefore(node3, node2)
+	Equal(t, l.Front().Value, node2.Value)
+
+	l.Remove(node2)
+	l.InsertAfter(node1, node2)
+	Equal(t, l.Back().Value, node2.Value)
+}
+
 func TestSingleEntryPopBack(t *testing.T) {
 
 	l := NewDoublyLinked[int]()
