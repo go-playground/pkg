@@ -10,5 +10,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/cache/compare/v5.14.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.14.0...HEAD
 [5.14.0]: https://github.com/go-playground/pkg/commit/v5.14.0
