@@ -5,12 +5,14 @@ package timeext
 
 import (
 	"testing"
+	"time"
 )
 
 func TestNanoTime(t *testing.T) {
 	t1 := NanoTime()
+	time.Sleep(time.Second)
 	t2 := NanoTime()
-	if t1 >= t2 {
+	if t2-t1 < int64(time.Second) {
 		t.Fatalf("nanotime failed to monotonically increase, t1: %d t2: %d", t1, t2)
 	}
 }
