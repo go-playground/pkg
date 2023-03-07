@@ -22,8 +22,8 @@ func (g MutexGuard[T, M]) Unlock() {
 }
 
 // NewMutex2 creates a new Mutex for use.
-func NewMutex2[T any, M *sync.Mutex](value T) Mutex2[T, M] {
-	return Mutex2[T, M]{
+func NewMutex2[T any](value T) Mutex2[T] {
+	return Mutex2[T]{
 		m:     new(sync.Mutex),
 		value: value,
 	}
@@ -31,7 +31,7 @@ func NewMutex2[T any, M *sync.Mutex](value T) Mutex2[T, M] {
 
 // Mutex2 creates a type safe mutex wrapper ensuring one cannot access the values of a locked values
 // without first gaining a lock.
-type Mutex2[T any, M *sync.Mutex] struct {
+type Mutex2[T any] struct {
 	m     *sync.Mutex
 	value T
 }
@@ -39,7 +39,7 @@ type Mutex2[T any, M *sync.Mutex] struct {
 // Lock locks the Mutex and returns value for use, safe for mutation if
 //
 // If the lock is already in use, the calling goroutine blocks until the mutex is available.
-func (m Mutex2[T, M]) Lock() MutexGuard[T, *sync.Mutex] {
+func (m Mutex2[T]) Lock() MutexGuard[T, *sync.Mutex] {
 	m.m.Lock()
 	return MutexGuard[T, *sync.Mutex]{
 		m: m.m,
@@ -60,7 +60,7 @@ func (m Mutex2[T, M]) Lock() MutexGuard[T, *sync.Mutex] {
 
 // PerformMut safely locks and unlocks the Mutex values and performs the provided function returning its error if one
 // otherwise setting the returned value as the new mutex value.
-func (m Mutex2[T, M]) PerformMut(f func(T)) {
+func (m Mutex2[T]) PerformMut(f func(T)) {
 	guard := m.Lock()
 	f(guard.T)
 	guard.Unlock()
@@ -68,7 +68,7 @@ func (m Mutex2[T, M]) PerformMut(f func(T)) {
 
 // TryLock tries to lock Mutex and reports whether it succeeded.
 // If it does the value is returned for use in the Ok result otherwise Err with empty value.
-func (m Mutex2[T, M]) TryLock() resultext.Result[MutexGuard[T, *sync.Mutex], struct{}] {
+func (m Mutex2[T]) TryLock() resultext.Result[MutexGuard[T, *sync.Mutex], struct{}] {
 	if m.m.TryLock() {
 		return resultext.Ok[MutexGuard[T, *sync.Mutex], struct{}](MutexGuard[T, *sync.Mutex]{
 			m: m.m,
