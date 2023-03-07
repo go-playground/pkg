@@ -9,11 +9,14 @@ import (
 	resultext "github.com/go-playground/pkg/v5/values/result"
 )
 
+// MutexGuard protects the inner contents of a Mutex2 for safety and unlocking.
 type MutexGuard[T any, M interface{ Unlock() }] struct {
 	m M
+	// T is the inner generic type of the Mutex
 	T T
 }
 
+// Unlock unlocks the Mutex2 value.
 func (g MutexGuard[T, M]) Unlock() {
 	g.m.Unlock()
 }
@@ -76,11 +79,14 @@ func (m Mutex2[T, M]) TryLock() resultext.Result[MutexGuard[T, *sync.Mutex], str
 	}
 }
 
+// RMutexGuard protects the inner contents of a RWMutex2 for safety and unlocking.
 type RMutexGuard[T any] struct {
 	rw *sync.RWMutex
-	T  T
+	// T is the inner generic type of the Mutex
+	T T
 }
 
+// RUnlock unlocks the RWMutex2 value.
 func (g RMutexGuard[T]) RUnlock() {
 	g.rw.RUnlock()
 }
