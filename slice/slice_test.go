@@ -79,3 +79,24 @@ func TestReduce(t *testing.T) {
 	})
 	Equal(t, result, optionext.None[int]())
 }
+
+func TestReverse(t *testing.T) {
+	s := []int{1, 2}
+	Reverse(s)
+	Equal(t, []int{2, 1}, s)
+
+	s = []int{1, 2, 3}
+	Reverse(s)
+	Equal(t, []int{3, 2, 1}, s)
+}
+
+func BenchmarkReverse(b *testing.B) {
+	s := make([]int, 0, 1000)
+	for i := 0; i < 1000; i++ {
+		s = append(s, i)
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Reverse(s)
+	}
+}
