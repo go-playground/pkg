@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.16.0] - 2023-04-16
+### Added
+- sliceext.Reverse(...)
+
 ## [5.15.2] - 2023-03-06
 ### Remove
 - Unnecessary second type param for Mutex2.
@@ -23,7 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.15.2...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.16.0...HEAD
+[5.16.0]: https://github.com/go-playground/pkg/compare/v5.15.2...v5.16.0
 [5.15.2]: https://github.com/go-playground/pkg/compare/v5.15.1...v5.15.2
 [5.15.1]: https://github.com/go-playground/pkg/compare/v5.15.0...v5.15.1
 [5.15.0]: https://github.com/go-playground/pkg/compare/v5.14.0...v5.15.0
