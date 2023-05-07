@@ -217,7 +217,11 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed JSON and replaces any values that may have been present
 func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
-	return decodeJSON(r.Header, r.Body, qp, r.URL.Query(), maxMemory, v)
+	var values url.Values
+	if qp == QueryParams {
+		values = r.URL.Query()
+	}
+	return decodeJSON(r.Header, r.Body, qp, values, maxMemory, v)
 }
 
 func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, values url.Values, maxMemory int64, v interface{}) (err error) {
@@ -247,7 +251,11 @@ func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, value
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed XML and replaces any values that may have been present
 func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
-	return decodeXML(r.Header, r.Body, qp, r.URL.Query(), maxMemory, v)
+	var values url.Values
+	if qp == QueryParams {
+		values = r.URL.Query()
+	}
+	return decodeXML(r.Header, r.Body, qp, values, maxMemory, v)
 }
 
 func decodeXML(headers http.Header, body io.Reader, qp QueryParamsOption, values url.Values, maxMemory int64, v interface{}) (err error) {
