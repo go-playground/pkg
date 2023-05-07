@@ -39,11 +39,14 @@ func TestDoRetryable(t *testing.T) {
 	fn := func(ctx context.Context) (*http.Request, error) {
 		return http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
 	}
+	retryCount := 0
 	dummyOnRetryFn := func(ctx context.Context, reason string, attempt int) optionext.Option[error] {
+		retryCount++
 		return optionext.None[error]()
 	}
 
 	result := DoRetryable[response](ctx, nil, http.StatusOK, bytesext.MiB, errorsext.IsRetryableHTTP, dummyOnRetryFn, fn)
 	Equal(t, result.IsErr(), false)
 	Equal(t, result.Unwrap().Name, expected)
+	Equal(t, retryCount, 2)
 }
