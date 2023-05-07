@@ -1,9 +1,14 @@
+//go:build go1.18
+// +build go1.18
+
 package httpext
 
 import (
 	"context"
 	"fmt"
+	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
+	ioext "github.com/go-playground/pkg/v5/io"
 	resultext "github.com/go-playground/pkg/v5/values/result"
 	"io"
 	"net/http"
@@ -82,7 +87,7 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn err
 // Gzip supported:
 // - JSON
 // - XML
-func DoRetryable[T any](ctx context.Context, client *http.Client, expectedResponseCode int, maxMemory int64, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[T, error] {
+func DoRetryable[T any](ctx context.Context, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[T, error] {
 
 	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) resultext.Result[T, error] {
 
@@ -94,7 +99,7 @@ func DoRetryable[T any](ctx context.Context, client *http.Client, expectedRespon
 		defer resp.Body.Close()
 
 		if resp.StatusCode != expectedResponseCode {
-			b, _ := io.ReadAll(resp.Body)
+			b, _ := io.ReadAll(ioext.LimitReader(resp.Body, maxMemory))
 			err := fmt.Errorf("invalid response status code: %d body: %s", resp.StatusCode, string(b))
 			return resultext.Err[T, error](err)
 		}

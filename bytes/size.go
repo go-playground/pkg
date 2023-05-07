@@ -1,5 +1,8 @@
 package bytesext
 
+// Bytes is a type alias to int64 in order to better express the desired data type.
+type Bytes = int64
+
 // Common byte unit sizes
 const (
 	BYTE = 1
