@@ -30,7 +30,7 @@ jobs:
             ${{ runner.os }}-v1-go-
 
       - name: Test
-        run: go test ./...
+        run: go test -race -cover ./...
 
   golangci:
     name: lint
