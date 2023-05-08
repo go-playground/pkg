@@ -49,12 +49,10 @@ func IsRetryableStatusCode(code int) bool {
 type BuildRequestFn func(ctx context.Context) (*http.Request, error)
 
 // IsRetryableStatusCodeFn is a function used to determine if the provided status code is considered retryable.
-//
-// this is also an optional place to put backoff strategies, logs and metrics emitting.
 type IsRetryableStatusCodeFn func(code int) bool
 
 // DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
-func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[*http.Response, error] {
+func DoRetryableResponse(ctx context.Context, client *http.Client, isRetryableStatusCode IsRetryableStatusCodeFn, onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[*http.Response, error] {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -78,7 +76,7 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn err
 			return resultext.Err[*http.Response, error](err)
 		}
 
-		if IsRetryableStatusCode(resp.StatusCode) {
+		if isRetryableStatusCode(resp.StatusCode) {
 			opt := onRetryFn(ctx, ErrRetryableStatusCode{StatusCode: resp.StatusCode}, strconv.Itoa(resp.StatusCode), attempt)
 			if opt.IsSome() {
 				return resultext.Err[*http.Response, error](opt.Unwrap())
@@ -96,11 +94,11 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn err
 // Gzip supported:
 // - JSON
 // - XML
-func DoRetryable[T any](ctx context.Context, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[T, error] {
+func DoRetryable[T any](ctx context.Context, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, isRetryableStatusCode IsRetryableStatusCodeFn, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[T, error] {
 
 	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) resultext.Result[T, error] {
 
-		result := DoRetryableResponse(ctx, client, onRetryFn, buildFn)
+		result := DoRetryableResponse(ctx, client, isRetryableStatusCode, onRetryFn, buildFn)
 		if result.IsErr() {
 			return resultext.Err[T, error](result.Err())
 		}
