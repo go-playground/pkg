@@ -40,7 +40,7 @@ func TestDoRetryable(t *testing.T) {
 		return http.NewRequestWithContext(ctx, http.MethodGet, server.URL, nil)
 	}
 	retryCount := 0
-	dummyOnRetryFn := func(ctx context.Context, reason string, attempt int) optionext.Option[error] {
+	dummyOnRetryFn := func(ctx context.Context, origErr error, reason string, attempt int) optionext.Option[error] {
 		retryCount++
 		return optionext.None[error]()
 	}

@@ -18,7 +18,7 @@ type IsRetryableFn[E any] func(err E) (reason string, isRetryable bool)
 // OnRetryFn is called after IsRetryableFn returns true and before the retry is attempted.
 //
 // this allows for interception, short-circuiting and adding of backoff strategies.
-type OnRetryFn[E any] func(ctx context.Context, reason string, attempt int) optionext.Option[E]
+type OnRetryFn[E any] func(ctx context.Context, originalErr E, reason string, attempt int) optionext.Option[E]
 
 // DoRetryable will execute the provided functions code and automatically retry using the provided retry function.
 func DoRetryable[T, E any](ctx context.Context, isRetryFn IsRetryableFn[E], onRetryFn OnRetryFn[E], fn RetryableFn[T, E]) resultext.Result[T, E] {
@@ -26,8 +26,9 @@ func DoRetryable[T, E any](ctx context.Context, isRetryFn IsRetryableFn[E], onRe
 	for {
 		result := fn(ctx)
 		if result.IsErr() {
-			if reason, isRetryable := isRetryFn(result.Err()); isRetryable {
-				if opt := onRetryFn(ctx, reason, attempt); opt.IsSome() {
+			err := result.Err()
+			if reason, isRetryable := isRetryFn(err); isRetryable {
+				if opt := onRetryFn(ctx, err, reason, attempt); opt.IsSome() {
 					return resultext.Err[T, E](opt.Unwrap())
 				}
 				attempt++

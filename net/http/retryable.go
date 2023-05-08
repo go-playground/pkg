@@ -31,6 +31,15 @@ var (
 	}
 )
 
+// ErrRetryableStatusCode can be used to indicate a retryable HTTP status code was encountered as an error.
+type ErrRetryableStatusCode struct {
+	StatusCode int
+}
+
+func (e ErrRetryableStatusCode) Error() string {
+	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.StatusCode)
+}
+
 // IsRetryableStatusCode returns if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
@@ -59,7 +68,7 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn err
 		resp, err := client.Do(req)
 		if err != nil {
 			if retryReason, isRetryable := errorsext.IsRetryableHTTP(err); isRetryable {
-				opt := onRetryFn(ctx, retryReason, attempt)
+				opt := onRetryFn(ctx, err, retryReason, attempt)
 				if opt.IsSome() {
 					return resultext.Err[*http.Response, error](opt.Unwrap())
 				}
@@ -70,7 +79,7 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, onRetryFn err
 		}
 
 		if IsRetryableStatusCode(resp.StatusCode) {
-			opt := onRetryFn(ctx, strconv.Itoa(resp.StatusCode), attempt)
+			opt := onRetryFn(ctx, ErrRetryableStatusCode{StatusCode: resp.StatusCode}, strconv.Itoa(resp.StatusCode), attempt)
 			if opt.IsSome() {
 				return resultext.Err[*http.Response, error](opt.Unwrap())
 			}
