@@ -45,7 +45,7 @@ func TestDoRetryable(t *testing.T) {
 		return optionext.None[error]()
 	}
 
-	result := DoRetryable[response](ctx, nil, http.StatusOK, bytesext.MiB, IsRetryableStatusCode, errorsext.IsRetryableHTTP, dummyOnRetryFn, fn)
+	result := DoRetryable[response](ctx, errorsext.IsRetryableHTTP, dummyOnRetryFn, IsRetryableStatusCode, nil, http.StatusOK, bytesext.MiB, fn)
 	Equal(t, result.IsErr(), false)
 	Equal(t, result.Unwrap().Name, expected)
 	Equal(t, retryCount, 2)

@@ -52,7 +52,7 @@ type BuildRequestFn func(ctx context.Context) (*http.Request, error)
 type IsRetryableStatusCodeFn func(code int) bool
 
 // DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
-func DoRetryableResponse(ctx context.Context, client *http.Client, isRetryableStatusCode IsRetryableStatusCodeFn, onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[*http.Response, error] {
+func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, buildFn BuildRequestFn) resultext.Result[*http.Response, error] {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -94,11 +94,11 @@ func DoRetryableResponse(ctx context.Context, client *http.Client, isRetryableSt
 // Gzip supported:
 // - JSON
 // - XML
-func DoRetryable[T any](ctx context.Context, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, isRetryableStatusCode IsRetryableStatusCodeFn, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], buildFn BuildRequestFn) resultext.Result[T, error] {
+func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, buildFn BuildRequestFn) resultext.Result[T, error] {
 
 	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) resultext.Result[T, error] {
 
-		result := DoRetryableResponse(ctx, client, isRetryableStatusCode, onRetryFn, buildFn)
+		result := DoRetryableResponse(ctx, onRetryFn, isRetryableStatusCode, client, buildFn)
 		if result.IsErr() {
 			return resultext.Err[T, error](result.Err())
 		}
