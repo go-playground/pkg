@@ -6,13 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [5.17.0] - 2023-05-07
+## [5.17.0] - 2023-05-08
 ### Added
 - bytesext.Bytes alias to int64 for better code clarity.
 - errorext.DoRetryable(...) building block for automating retryable errors.
 - sqlext.DoTransaction(...) building block for abstracting away transactions.
 - httpext.DoRetryableResponse(...) & httpext.DoRetryable(...) building blocks for automating retryable http requests.
 - httpext.DecodeResponse(...) building block for decoding http responses.
+- httpext.ErrRetryableStatusCode error for retryable http status code detection and handling.
+- errorsext.ErrMaxAttemptsReached error for retryable retryable logic & reuse.
 
 ## [5.16.0] - 2023-04-16
 ### Added
