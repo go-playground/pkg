@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [5.17.1] - 2023-05-09
 ### Fixed
 - ErrRetryableStatusCode passing the *http.Response to have access to not only the status code but headers etc. related to retrying.
+- Added ErrUnexpectedResponse to pass back when encountering an unexpected response code to allow the caller to decide what to do.
 
 ## [5.17.0] - 2023-05-08
 ### Added
