@@ -8,9 +8,7 @@ import (
 	"fmt"
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
-	ioext "github.com/go-playground/pkg/v5/io"
 	resultext "github.com/go-playground/pkg/v5/values/result"
-	"io"
 	"net/http"
 	"strconv"
 )
@@ -33,11 +31,20 @@ var (
 
 // ErrRetryableStatusCode can be used to indicate a retryable HTTP status code was encountered as an error.
 type ErrRetryableStatusCode struct {
-	StatusCode int
+	Response *http.Response
 }
 
 func (e ErrRetryableStatusCode) Error() string {
-	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.StatusCode)
+	return fmt.Sprintf("retryable HTTP status code encountered: %d", e.Response.StatusCode)
+}
+
+// ErrUnexpectedResponse can be used to indicate an unexpected response was encountered as an error and provide access to the *http.Response.
+type ErrUnexpectedResponse struct {
+	Response *http.Response
+}
+
+func (e ErrUnexpectedResponse) Error() string {
+	return "unexpected response encountered"
 }
 
 // IsRetryableStatusCode returns if the provided status code is considered retryable.
@@ -77,7 +84,7 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 		}
 
 		if isRetryableStatusCode(resp.StatusCode) {
-			opt := onRetryFn(ctx, ErrRetryableStatusCode{StatusCode: resp.StatusCode}, strconv.Itoa(resp.StatusCode), attempt)
+			opt := onRetryFn(ctx, ErrRetryableStatusCode{Response: resp}, strconv.Itoa(resp.StatusCode), attempt)
 			if opt.IsSome() {
 				return resultext.Err[*http.Response, error](opt.Unwrap())
 			}
@@ -106,9 +113,7 @@ func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryable
 		defer resp.Body.Close()
 
 		if resp.StatusCode != expectedResponseCode {
-			b, _ := io.ReadAll(ioext.LimitReader(resp.Body, maxMemory))
-			err := fmt.Errorf("invalid response status code: %d body: %s", resp.StatusCode, string(b))
-			return resultext.Err[T, error](err)
+			return resultext.Err[T, error](ErrUnexpectedResponse{Response: resp})
 		}
 
 		data, err := DecodeResponse[T](resp, maxMemory)
