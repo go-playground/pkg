@@ -110,11 +110,11 @@ func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryable
 			return resultext.Err[T, error](result.Err())
 		}
 		resp := result.Unwrap()
-		defer resp.Body.Close()
 
 		if resp.StatusCode != expectedResponseCode {
 			return resultext.Err[T, error](ErrUnexpectedResponse{Response: resp})
 		}
+		defer resp.Body.Close()
 
 		data, err := DecodeResponse[T](resp, maxMemory)
 		if err != nil {
