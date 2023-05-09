@@ -8,6 +8,7 @@ import (
 	"mime"
 	"net"
 	"net/http"
+	"net/url"
 	"path/filepath"
 	"strings"
 
@@ -102,11 +103,9 @@ func ClientIP(r *http.Request) (clientIP string) {
 	return
 }
 
-//
 // JSONStream uses json.Encoder to stream the JSON reponse body.
 //
 // This differs from the JSON helper which unmarshalls into memory first allowing the capture of JSON encoding errors.
-//
 func JSONStream(w http.ResponseWriter, status int, i interface{}) error {
 	w.Header().Set(ContentType, ApplicationJSON)
 	w.WriteHeader(status)
@@ -218,10 +217,17 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed JSON and replaces any values that may have been present
 func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
-	var body io.Reader = r.Body
-	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
+	var values url.Values
+	if qp == QueryParams {
+		values = r.URL.Query()
+	}
+	return decodeJSON(r.Header, r.Body, qp, values, maxMemory, v)
+}
+
+func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, values url.Values, maxMemory int64, v interface{}) (err error) {
+	if encoding := headers.Get(ContentEncoding); encoding == Gzip {
 		var gzr *gzip.Reader
-		gzr, err = gzip.NewReader(r.Body)
+		gzr, err = gzip.NewReader(body)
 		if err != nil {
 			return
 		}
@@ -232,7 +238,7 @@ func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interf
 	}
 	err = json.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
 	if qp == QueryParams && err == nil {
-		err = DecodeQueryParams(r, v)
+		err = decodeQueryParams(values, v)
 	}
 	return
 }
@@ -245,10 +251,17 @@ func DecodeJSON(r *http.Request, qp QueryParamsOption, maxMemory int64, v interf
 // NOTE: when includeQueryParams=true query params will be parsed and included eg. route /user?test=true 'test'
 // is added to parsed XML and replaces any values that may have been present
 func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{}) (err error) {
-	var body io.Reader = r.Body
-	if encoding := r.Header.Get(ContentEncoding); encoding == Gzip {
+	var values url.Values
+	if qp == QueryParams {
+		values = r.URL.Query()
+	}
+	return decodeXML(r.Header, r.Body, qp, values, maxMemory, v)
+}
+
+func decodeXML(headers http.Header, body io.Reader, qp QueryParamsOption, values url.Values, maxMemory int64, v interface{}) (err error) {
+	if encoding := headers.Get(ContentEncoding); encoding == Gzip {
 		var gzr *gzip.Reader
-		gzr, err = gzip.NewReader(r.Body)
+		gzr, err = gzip.NewReader(body)
 		if err != nil {
 			return
 		}
@@ -259,14 +272,18 @@ func DecodeXML(r *http.Request, qp QueryParamsOption, maxMemory int64, v interfa
 	}
 	err = xml.NewDecoder(ioext.LimitReader(body, maxMemory)).Decode(v)
 	if qp == QueryParams && err == nil {
-		err = DecodeQueryParams(r, v)
+		err = decodeQueryParams(values, v)
 	}
 	return
 }
 
 // DecodeQueryParams takes the URL Query params flag.
 func DecodeQueryParams(r *http.Request, v interface{}) (err error) {
-	err = DefaultFormDecoder.Decode(v, r.URL.Query())
+	return decodeQueryParams(r.URL.Query(), v)
+}
+
+func decodeQueryParams(values url.Values, v interface{}) (err error) {
+	err = DefaultFormDecoder.Decode(v, values)
 	return
 }
 
@@ -275,7 +292,7 @@ const (
 	nakedApplicationXML  string = "application/xml"
 )
 
-// Decode takes the request and attempts to discover it's content type via
+// Decode takes the request and attempts to discover its content type via
 // the http headers and then decode the request body into the provided struct.
 // Example if header was "application/json" would decode using
 // json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).

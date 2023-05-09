@@ -6,6 +6,12 @@ import (
 	"syscall"
 )
 
+var (
+	// ErrMaxAttemptsReached is a placeholder error to use when some retryable even has reached its maximum number of
+	// attempts.
+	ErrMaxAttemptsReached = errors.New("max attempts reached")
+)
+
 // IsRetryableHTTP returns if the provided error is considered retryable HTTP error. It also returns the
 // type, in string form, for optional logging and metrics use.
 func IsRetryableHTTP(err error) (retryType string, isRetryable bool) {
