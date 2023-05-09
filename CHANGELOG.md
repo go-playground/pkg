@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.17.2] - 2023-05-09
+### Fixed
+- Prematurely closing http.Response Body before error with it can be intercepted for ErrUnexpectedResponse. 
+
 ## [5.17.1] - 2023-05-09
 ### Fixed
 - ErrRetryableStatusCode passing the *http.Response to have access to not only the status code but headers etc. related to retrying.
@@ -42,7 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.17.1...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.17.2...HEAD
+[5.17.2]: https://github.com/go-playground/pkg/compare/v5.17.1..v5.17.2
 [5.17.1]: https://github.com/go-playground/pkg/compare/v5.17.0...v5.17.1
 [5.17.0]: https://github.com/go-playground/pkg/compare/v5.16.0...v5.17.0
 [5.16.0]: https://github.com/go-playground/pkg/compare/v5.15.2...v5.16.0
