@@ -1,6 +1,6 @@
 # pkg
 
-![Project status](https://img.shields.io/badge/version-5.17.2-green.svg)
+![Project status](https://img.shields.io/badge/version-5.18.0-green.svg)
 [![Lint & Test](https://github.com/go-playground/pkg/actions/workflows/go.yml/badge.svg)](https://github.com/go-playground/pkg/actions/workflows/go.yml)
 [![Coverage Status](https://coveralls.io/repos/github/go-playground/pkg/badge.svg?branch=master)](https://coveralls.io/github/go-playground/pkg?branch=master)
 [![GoDoc](https://godoc.org/github.com/go-playground/pkg?status.svg)](https://pkg.go.dev/mod/github.com/go-playground/pkg/v5)
