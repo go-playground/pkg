@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.18.0] - 2023-05-21
+### Added
+- typesext.Nothing & valuesext.Nothing for better clarity in generic params and values that represent struct{}. This will provide better code readability and intent.
+
 ## [5.17.2] - 2023-05-09
 ### Fixed
 - Prematurely closing http.Response Body before error with it can be intercepted for ErrUnexpectedResponse. 
@@ -46,7 +50,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.17.2...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.18.0...HEAD
+[5.18.0]: https://github.com/go-playground/pkg/compare/v5.17.2..v5.18.0
 [5.17.2]: https://github.com/go-playground/pkg/compare/v5.17.1..v5.17.2
 [5.17.1]: https://github.com/go-playground/pkg/compare/v5.17.0...v5.17.1
 [5.17.0]: https://github.com/go-playground/pkg/compare/v5.16.0...v5.17.0
