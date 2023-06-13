@@ -30,8 +30,17 @@ func TestSQL(t *testing.T) {
 	var optionF64 Option[float64]
 	var optionByte Option[byte]
 	var optionTime Option[time.Time]
+	var optionInterface Option[any]
 
-	err := optionI64.Scan(value)
+	err := optionInterface.Scan(1)
+	Equal(t, err, nil)
+	Equal(t, optionInterface, Some(any(1)))
+
+	err = optionInterface.Scan("blah")
+	Equal(t, err, nil)
+	Equal(t, optionInterface, Some(any("blah")))
+
+	err = optionI64.Scan(value)
 	Equal(t, err, nil)
 	Equal(t, optionI64, Some(value))
 

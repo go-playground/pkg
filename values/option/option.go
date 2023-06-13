@@ -149,6 +149,8 @@ func (o *Option[T]) Scan(value any) error {
 			return err
 		}
 		*o = Some(reflect.ValueOf(v.Int64).Interface().(T))
+	case reflect.Interface:
+		*o = Some(reflect.ValueOf(value).Interface().(T))
 	case reflect.Struct:
 		if val.Type() == reflect.TypeOf(time.Time{}) {
 			switch t := value.(type) {
