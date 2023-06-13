@@ -11,6 +11,103 @@ import (
 	. "github.com/go-playground/assert/v2"
 )
 
+type customScanner struct {
+	S string
+}
+
+func (c *customScanner) Scan(src interface{}) error {
+	c.S = src.(string)
+	return nil
+}
+
+func TestSQL(t *testing.T) {
+	value := int64(123)
+	var optionI64 Option[int64]
+	var optionI32 Option[int32]
+	var optionI16 Option[int16]
+	var optionString Option[string]
+	var optionBool Option[bool]
+	var optionF64 Option[float64]
+	var optionByte Option[byte]
+	var optionTime Option[time.Time]
+
+	err := optionI64.Scan(value)
+	Equal(t, err, nil)
+	Equal(t, optionI64, Some(value))
+
+	err = optionI32.Scan(value)
+	Equal(t, err, nil)
+	Equal(t, optionI32, Some(int32(value)))
+
+	err = optionI16.Scan(value)
+	Equal(t, err, nil)
+	Equal(t, optionI16, Some(int16(value)))
+
+	err = optionBool.Scan(1)
+	Equal(t, err, nil)
+	Equal(t, optionBool, Some(true))
+
+	err = optionString.Scan(value)
+	Equal(t, err, nil)
+	Equal(t, optionString, Some("123"))
+
+	err = optionF64.Scan(2.0)
+	Equal(t, err, nil)
+	Equal(t, optionF64, Some(2.0))
+
+	err = optionByte.Scan(uint8('1'))
+	Equal(t, err, nil)
+	Equal(t, optionByte, Some(uint8('1')))
+
+	err = optionTime.Scan("2023-06-13T06:34:32Z")
+	Equal(t, err, nil)
+	Equal(t, optionTime, Some(time.Date(2023, 6, 13, 6, 34, 32, 0, time.UTC)))
+
+	err = optionTime.Scan([]byte("2023-06-13T06:34:32Z"))
+	Equal(t, err, nil)
+	Equal(t, optionTime, Some(time.Date(2023, 6, 13, 6, 34, 32, 0, time.UTC)))
+
+	err = optionTime.Scan(time.Date(2023, 6, 13, 6, 34, 32, 0, time.UTC))
+	Equal(t, err, nil)
+	Equal(t, optionTime, Some(time.Date(2023, 6, 13, 6, 34, 32, 0, time.UTC)))
+
+	// Test nil
+	var nullableOption Option[int64]
+	err = nullableOption.Scan(nil)
+	Equal(t, err, nil)
+	Equal(t, nullableOption, None[int64]())
+
+	// custom scanner
+	var custom Option[customScanner]
+	err = custom.Scan("GOT HERE")
+	Equal(t, err, nil)
+	Equal(t, custom, Some(customScanner{S: "GOT HERE"}))
+
+	// test unmarshal to struct
+	type myStruct struct {
+		Name string `json:"name"`
+	}
+
+	var optionMyStruct Option[myStruct]
+	err = optionMyStruct.Scan([]byte(`{"name":"test"}`))
+	Equal(t, err, nil)
+	Equal(t, optionMyStruct, Some(myStruct{Name: "test"}))
+
+	err = optionMyStruct.Scan(json.RawMessage(`{"name":"test2"}`))
+	Equal(t, err, nil)
+	Equal(t, optionMyStruct, Some(myStruct{Name: "test2"}))
+
+	var optionArrayOfMyStruct Option[[]myStruct]
+	err = optionArrayOfMyStruct.Scan([]byte(`[{"name":"test"}]`))
+	Equal(t, err, nil)
+	Equal(t, optionArrayOfMyStruct, Some([]myStruct{{Name: "test"}}))
+
+	var optionMap Option[map[string]any]
+	err = optionMap.Scan([]byte(`{"name":"test"}`))
+	Equal(t, err, nil)
+	Equal(t, optionMap, Some(map[string]any{"name": "test"}))
+}
+
 func TestNilOption(t *testing.T) {
 	value := Some[any](nil)
 	Equal(t, false, value.IsNone())
