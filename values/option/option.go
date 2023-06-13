@@ -99,12 +99,12 @@ func (o *Option[T]) Scan(value any) error {
 		o.isSome = true
 		return nil
 	}
-	val = val.Elem()
 
 	if value == nil {
 		*o = None[T]()
 		return nil
 	}
+	val = val.Elem()
 
 	switch val.Kind() {
 	case reflect.String:
@@ -158,12 +158,14 @@ func (o *Option[T]) Scan(value any) error {
 					return err
 				}
 				*o = Some(reflect.ValueOf(tm).Interface().(T))
+
 			case []byte:
 				tm, err := time.Parse(time.RFC3339Nano, string(t))
 				if err != nil {
 					return err
 				}
 				*o = Some(reflect.ValueOf(tm).Interface().(T))
+
 			default:
 				var v sql.NullTime
 				if err := v.Scan(value); err != nil {
@@ -179,8 +181,6 @@ func (o *Option[T]) Scan(value any) error {
 		switch val.Kind() {
 		case reflect.Struct, reflect.Slice, reflect.Map:
 			v := reflect.ValueOf(value)
-
-			fmt.Println(v.Type().ConvertibleTo(byteSliceType))
 
 			if v.Type().ConvertibleTo(byteSliceType) {
 				if err := json.Unmarshal(v.Convert(byteSliceType).Interface().([]byte), &o.value); err != nil {
