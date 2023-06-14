@@ -12,11 +12,34 @@ import (
 	"time"
 )
 
+var (
+	scanType      = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
+	byteSliceType = reflect.TypeOf(([]byte)(nil))
+)
+
 // Option represents a values that represents a values existence.
 //
 // nil is usually used on Go however this has two problems:
 // 1. Checking if the return values is nil is NOT enforced and can lead to panics.
 // 2. Using nil is not good enough when nil itself is a valid value.
+//
+// This implements the sql.Scanner interface and can be used as a sql value for reading and writing. It supports:
+// - String
+// - Bool
+// - Uint8
+// - Float64
+// - Int16
+// - Int32
+// - Int64
+// - interface{}/any
+// - time.Time
+// - Struct - when type is convertable to []byte and assumes JSON.
+// - Slice - when type is convertable to []byte and assumes JSON.
+// - Map types - when type is convertable to []byte and assumes JSON.
+//
+// This also implements the `json.Marshaler` and `json.Unmarshaler` interfaces. The only caveat is a None value will result
+// in a JSON `null` value. there is no way to hook into the std library to make `omitempty` not produce any value at
+// this time.
 type Option[T any] struct {
 	value  T
 	isSome bool
@@ -50,7 +73,7 @@ func None[T any]() Option[T] {
 	return Option[T]{}
 }
 
-// MarshalJSON implements the json.Marshaler interface.
+// MarshalJSON implements the `json.Marshaler` interface.
 func (o Option[T]) MarshalJSON() ([]byte, error) {
 	if o.isSome {
 		return json.Marshal(o.value)
@@ -58,7 +81,7 @@ func (o Option[T]) MarshalJSON() ([]byte, error) {
 	return []byte("null"), nil
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
+// UnmarshalJSON implements the `json.Unmarshaler` interface.
 func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	if len(data) == 4 && string(data[:4]) == "null" {
 		*o = None[T]()
@@ -83,93 +106,110 @@ func (o Option[T]) Value() (driver.Value, error) {
 
 // Scan implements the sql.Scanner interface.
 func (o *Option[T]) Scan(value any) error {
-	val := reflect.ValueOf(o.value)
+
+	val := reflect.ValueOf(&o.value)
+
+	if val.Type().Implements(scanType) {
+		err := val.Interface().(sql.Scanner).Scan(value)
+		if err != nil {
+			return err
+		}
+		o.isSome = true
+		return nil
+	}
+
+	if value == nil {
+		*o = None[T]()
+		return nil
+	}
+	val = val.Elem()
+
 	switch val.Kind() {
 	case reflect.String:
 		var v sql.NullString
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.String).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.String).Interface().(T))
 	case reflect.Bool:
 		var v sql.NullBool
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Bool).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Bool).Interface().(T))
 	case reflect.Uint8:
 		var v sql.NullByte
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Byte).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Byte).Interface().(T))
 	case reflect.Float64:
 		var v sql.NullFloat64
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Float64).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Float64).Interface().(T))
 	case reflect.Int16:
 		var v sql.NullInt16
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Int16).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Int16).Interface().(T))
 	case reflect.Int32:
 		var v sql.NullInt32
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Int32).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Int32).Interface().(T))
 	case reflect.Int64:
 		var v sql.NullInt64
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		if !v.Valid {
-			*o = None[T]()
-		} else {
-			*o = Some(reflect.ValueOf(v.Int64).Interface().(T))
-		}
+		*o = Some(reflect.ValueOf(v.Int64).Interface().(T))
+	case reflect.Interface:
+		*o = Some(reflect.ValueOf(value).Interface().(T))
 	case reflect.Struct:
 		if val.Type() == reflect.TypeOf(time.Time{}) {
-			var v sql.NullTime
-			if err := v.Scan(value); err != nil {
-				return err
-			}
-			if !v.Valid {
-				*o = None[T]()
-			} else {
+			switch t := value.(type) {
+			case string:
+				tm, err := time.Parse(time.RFC3339Nano, t)
+				if err != nil {
+					return err
+				}
+				*o = Some(reflect.ValueOf(tm).Interface().(T))
+
+			case []byte:
+				tm, err := time.Parse(time.RFC3339Nano, string(t))
+				if err != nil {
+					return err
+				}
+				*o = Some(reflect.ValueOf(tm).Interface().(T))
+
+			default:
+				var v sql.NullTime
+				if err := v.Scan(value); err != nil {
+					return err
+				}
 				*o = Some(reflect.ValueOf(v.Time).Interface().(T))
 			}
 			return nil
 		}
 		fallthrough
+
 	default:
+		switch val.Kind() {
+		case reflect.Struct, reflect.Slice, reflect.Map:
+			v := reflect.ValueOf(value)
+
+			if v.Type().ConvertibleTo(byteSliceType) {
+				if err := json.Unmarshal(v.Convert(byteSliceType).Interface().([]byte), &o.value); err != nil {
+					return err
+				}
+				o.isSome = true
+				return nil
+			}
+		}
 		return fmt.Errorf("unsupported Scan, storing driver.Value type %T into type %T", value, o.value)
 	}
 	return nil
