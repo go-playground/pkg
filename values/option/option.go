@@ -22,6 +22,24 @@ var (
 // nil is usually used on Go however this has two problems:
 // 1. Checking if the return values is nil is NOT enforced and can lead to panics.
 // 2. Using nil is not good enough when nil itself is a valid value.
+//
+// This implements the sql.Scanner interface and can be used as a sql value for reading and writing. It supports:
+// - String
+// - Bool
+// - Uint8
+// - Float64
+// - Int16
+// - Int32
+// - Int64
+// - interface{}/any
+// - time.Time
+// - Struct - when type is convertable to []byte and assumes JSON.
+// - Slice - when type is convertable to []byte and assumes JSON.
+// - Map types - when type is convertable to []byte and assumes JSON.
+//
+// This also implements the `json.Marshaler` and `json.Unmarshaler` interfaces. The only caveat is a None value will result
+// in a JSON `null` value. there is no way to hook into the std library to make `omitempty` not produce any value at
+// this time.
 type Option[T any] struct {
 	value  T
 	isSome bool
@@ -55,7 +73,7 @@ func None[T any]() Option[T] {
 	return Option[T]{}
 }
 
-// MarshalJSON implements the json.Marshaler interface.
+// MarshalJSON implements the `json.Marshaler` interface.
 func (o Option[T]) MarshalJSON() ([]byte, error) {
 	if o.isSome {
 		return json.Marshal(o.value)
@@ -63,7 +81,7 @@ func (o Option[T]) MarshalJSON() ([]byte, error) {
 	return []byte("null"), nil
 }
 
-// UnmarshalJSON implements the json.Unmarshaler interface.
+// UnmarshalJSON implements the `json.Unmarshaler` interface.
 func (o *Option[T]) UnmarshalJSON(data []byte) error {
 	if len(data) == 4 && string(data[:4]) == "null" {
 		*o = None[T]()
