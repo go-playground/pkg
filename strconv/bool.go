@@ -17,5 +17,5 @@ func ParseBool(str string) (bool, error) {
 	}
 	// strconv.NumError mimicking exactly the strconv.ParseBool(..) error and type
 	// to ensure compatibility with std library.
-	return false, &strconv.NumError{Func: "ParseBool", Num: str, Err: strconv.ErrSyntax}
+	return false, &strconv.NumError{Func: "ParseBool", Num: string([]byte(str)), Err: strconv.ErrSyntax}
 }
