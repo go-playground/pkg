@@ -4,12 +4,162 @@
 package optionext
 
 import (
+	"database/sql/driver"
 	"encoding/json"
+	"reflect"
 	"testing"
 	"time"
 
 	. "github.com/go-playground/assert/v2"
 )
+
+type valueTest struct {
+}
+
+func (valueTest) Value() (driver.Value, error) {
+	return "value", nil
+}
+
+type customStringType string
+
+type testStructType struct {
+	Name string
+}
+
+func TestSQLDriverValue(t *testing.T) {
+
+	var v valueTest
+	Equal(t, reflect.TypeOf(v).Implements(valuerType), true)
+
+	// none
+	nOpt := None[string]()
+	nVal, err := nOpt.Value()
+	Equal(t, err, nil)
+	Equal(t, nVal, nil)
+
+	// string + convert custom string type
+	sOpt := Some("myString")
+	sVal, err := sOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok := sVal.(string)
+	Equal(t, ok, true)
+	Equal(t, sVal, "myString")
+
+	sCustOpt := Some(customStringType("string"))
+	sCustVal, err := sCustOpt.Value()
+	Equal(t, err, nil)
+	Equal(t, sCustVal, "string")
+
+	_, ok = sCustVal.(string)
+	Equal(t, ok, true)
+
+	// bool
+	bOpt := Some(true)
+	bVal, err := bOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = bVal.(bool)
+	Equal(t, ok, true)
+	Equal(t, bVal, true)
+
+	// int64
+	iOpt := Some(int64(2))
+	iVal, err := iOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = iVal.(int64)
+	Equal(t, ok, true)
+	Equal(t, iVal, int64(2))
+
+	// float64
+	fOpt := Some(1.1)
+	fVal, err := fOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = fVal.(float64)
+	Equal(t, ok, true)
+	Equal(t, fVal, 1.1)
+
+	// time.Time
+	dt := time.Now().UTC()
+	dtOpt := Some(dt)
+	dtVal, err := dtOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = dtVal.(time.Time)
+	Equal(t, ok, true)
+	Equal(t, dtVal, dt)
+
+	// Slice []byte
+	b := []byte("myBytes")
+	bytesOpt := Some(b)
+	bytesVal, err := bytesOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = bytesVal.([]byte)
+	Equal(t, ok, true)
+	Equal(t, bytesVal, b)
+
+	// Slice []uint8
+	b2 := []uint8("myBytes")
+	bytes2Opt := Some(b2)
+	bytes2Val, err := bytes2Opt.Value()
+	Equal(t, err, nil)
+
+	_, ok = bytes2Val.([]byte)
+	Equal(t, ok, true)
+	Equal(t, bytes2Val, b2)
+
+	// Array []byte
+	a := []byte{'1', '2', '3'}
+	arrayOpt := Some(a)
+	arrayVal, err := arrayOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = arrayVal.([]byte)
+	Equal(t, ok, true)
+	Equal(t, arrayVal, a)
+
+	// Slice []byte
+	data := []testStructType{{Name: "test"}}
+	b, err = json.Marshal(data)
+	Equal(t, err, nil)
+
+	dataOpt := Some(data)
+	dataVal, err := dataOpt.Value()
+	Equal(t, err, nil)
+
+	_, ok = dataVal.([]byte)
+	Equal(t, ok, true)
+	Equal(t, dataVal, b)
+
+	// Map
+	data2 := map[string]int{"test": 1}
+	b, err = json.Marshal(data2)
+	Equal(t, err, nil)
+
+	data2Opt := Some(data2)
+	data2Val, err := data2Opt.Value()
+	Equal(t, err, nil)
+
+	_, ok = data2Val.([]byte)
+	Equal(t, ok, true)
+	Equal(t, data2Val, b)
+
+	// Struct
+	data3 := testStructType{Name: "test"}
+	b, err = json.Marshal(data3)
+	Equal(t, err, nil)
+
+	data3Opt := Some(data3)
+	data3Val, err := data3Opt.Value()
+	Equal(t, err, nil)
+
+	_, ok = data3Val.([]byte)
+	Equal(t, ok, true)
+	Equal(t, data3Val, b)
+}
 
 type customScanner struct {
 	S string
@@ -20,7 +170,7 @@ func (c *customScanner) Scan(src interface{}) error {
 	return nil
 }
 
-func TestSQL(t *testing.T) {
+func TestSQLScanner(t *testing.T) {
 	value := int64(123)
 	var optionI64 Option[int64]
 	var optionI32 Option[int32]
@@ -115,6 +265,12 @@ func TestSQL(t *testing.T) {
 	err = optionMap.Scan([]byte(`{"name":"test"}`))
 	Equal(t, err, nil)
 	Equal(t, optionMap, Some(map[string]any{"name": "test"}))
+
+	// test custom types
+	var ct Option[customStringType]
+	err = ct.Scan("test")
+	Equal(t, err, nil)
+	Equal(t, ct, Some(customStringType("test")))
 }
 
 func TestNilOption(t *testing.T) {

@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.20.0] - 2023-06-17
+### Added
+- Expanded Option type SQL Value support to handle value custom types and honour the `driver.Valuer` interface.
+
+### Changed
+- Option sql.Scanner to support custom types.
+
 ## [5.19.0] - 2023-06-14
 ### Added
 - strconvext.ParseBool(...) which is a drop-in replacement for the std lin strconv.ParseBool(..) with a few more supported values.
@@ -55,7 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.19.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.20.0...HEAD
+[5.20.0]: https://github.com/go-playground/pkg/compare/v5.19.0..v5.20.0
 [5.19.0]: https://github.com/go-playground/pkg/compare/v5.18.0..v5.19.0
 [5.18.0]: https://github.com/go-playground/pkg/compare/v5.17.2..v5.18.0
 [5.17.2]: https://github.com/go-playground/pkg/compare/v5.17.1..v5.17.2

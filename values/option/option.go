@@ -15,6 +15,12 @@ import (
 var (
 	scanType      = reflect.TypeOf((*sql.Scanner)(nil)).Elem()
 	byteSliceType = reflect.TypeOf(([]byte)(nil))
+	valuerType    = reflect.TypeOf((*driver.Valuer)(nil)).Elem()
+	timeType      = reflect.TypeOf((*time.Time)(nil)).Elem()
+	stringType    = reflect.TypeOf((*string)(nil)).Elem()
+	int64Type     = reflect.TypeOf((*int64)(nil)).Elem()
+	float64Type   = reflect.TypeOf((*float64)(nil)).Elem()
+	boolType      = reflect.TypeOf((*bool)(nil)).Elem()
 )
 
 // Option represents a values that represents a values existence.
@@ -97,11 +103,43 @@ func (o *Option[T]) UnmarshalJSON(data []byte) error {
 }
 
 // Value implements the driver.Valuer interface.
+//
+// This honours the `driver.Valuer` interface if the value implements it.
+// It also supports custom types of the std types and treats all else as []byte/
 func (o Option[T]) Value() (driver.Value, error) {
-	if o.isSome {
-		return o.Unwrap(), nil
+	if o.IsNone() {
+		return nil, nil
 	}
-	return nil, nil
+	value := o.Unwrap()
+	val := reflect.ValueOf(value)
+
+	if val.Type().Implements(valuerType) {
+		return val.Interface().(driver.Valuer).Value()
+	}
+	switch val.Kind() {
+	case reflect.String:
+		return val.Convert(stringType).Interface(), nil
+	case reflect.Bool:
+		return val.Convert(boolType).Interface(), nil
+	case reflect.Int64:
+		return val.Convert(int64Type).Interface(), nil
+	case reflect.Float64:
+		return val.Convert(float64Type).Interface(), nil
+	case reflect.Slice, reflect.Array:
+		if val.Type().ConvertibleTo(byteSliceType) {
+			return val.Convert(byteSliceType).Interface(), nil
+		}
+		return json.Marshal(val.Interface())
+	case reflect.Struct:
+		if val.CanConvert(timeType) {
+			return val.Convert(timeType).Interface(), nil
+		}
+		return json.Marshal(val.Interface())
+	case reflect.Map:
+		return json.Marshal(val.Interface())
+	default:
+		return val.Interface(), nil
+	}
 }
 
 // Scan implements the sql.Scanner interface.
@@ -130,68 +168,68 @@ func (o *Option[T]) Scan(value any) error {
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.String).Interface().(T))
+		*o = Some(reflect.ValueOf(v.String).Convert(val.Type()).Interface().(T))
 	case reflect.Bool:
 		var v sql.NullBool
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Bool).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Bool).Convert(val.Type()).Interface().(T))
 	case reflect.Uint8:
 		var v sql.NullByte
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Byte).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Byte).Convert(val.Type()).Interface().(T))
 	case reflect.Float64:
 		var v sql.NullFloat64
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Float64).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Float64).Convert(val.Type()).Interface().(T))
 	case reflect.Int16:
 		var v sql.NullInt16
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Int16).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Int16).Convert(val.Type()).Interface().(T))
 	case reflect.Int32:
 		var v sql.NullInt32
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Int32).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Int32).Convert(val.Type()).Interface().(T))
 	case reflect.Int64:
 		var v sql.NullInt64
 		if err := v.Scan(value); err != nil {
 			return err
 		}
-		*o = Some(reflect.ValueOf(v.Int64).Interface().(T))
+		*o = Some(reflect.ValueOf(v.Int64).Convert(val.Type()).Interface().(T))
 	case reflect.Interface:
-		*o = Some(reflect.ValueOf(value).Interface().(T))
+		*o = Some(reflect.ValueOf(value).Convert(val.Type()).Interface().(T))
 	case reflect.Struct:
-		if val.Type() == reflect.TypeOf(time.Time{}) {
+		if val.CanConvert(timeType) {
 			switch t := value.(type) {
 			case string:
 				tm, err := time.Parse(time.RFC3339Nano, t)
 				if err != nil {
 					return err
 				}
-				*o = Some(reflect.ValueOf(tm).Interface().(T))
+				*o = Some(reflect.ValueOf(tm).Convert(val.Type()).Interface().(T))
 
 			case []byte:
 				tm, err := time.Parse(time.RFC3339Nano, string(t))
 				if err != nil {
 					return err
 				}
-				*o = Some(reflect.ValueOf(tm).Interface().(T))
+				*o = Some(reflect.ValueOf(tm).Convert(val.Type()).Interface().(T))
 
 			default:
 				var v sql.NullTime
 				if err := v.Scan(value); err != nil {
 					return err
 				}
-				*o = Some(reflect.ValueOf(v.Time).Interface().(T))
+				*o = Some(reflect.ValueOf(v.Time).Convert(val.Type()).Interface().(T))
 			}
 			return nil
 		}
