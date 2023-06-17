@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Expanded Option type SQL Value support to handle value custom types and honour the `driver.Valuer` interface.
 
+### Changed
+- Option sql.Scanner to support custom types.
+
 ## [5.19.0] - 2023-06-14
 ### Added
 - strconvext.ParseBool(...) which is a drop-in replacement for the std lin strconv.ParseBool(..) with a few more supported values.
