@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.21.0] - 2023-06-30
+### Added
+- Instant type to make working with monotonically increasing times more convenient. 
+
 ## [5.20.0] - 2023-06-17
 ### Added
 - Expanded Option type SQL Value support to handle value custom types and honour the `driver.Valuer` interface.
@@ -62,7 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.20.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.21.0...HEAD
+[5.21.0]: https://github.com/go-playground/pkg/compare/v5.20.0..v5.21.0
 [5.20.0]: https://github.com/go-playground/pkg/compare/v5.19.0..v5.20.0
 [5.19.0]: https://github.com/go-playground/pkg/compare/v5.18.0..v5.19.0
 [5.18.0]: https://github.com/go-playground/pkg/compare/v5.17.2..v5.18.0
