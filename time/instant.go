@@ -17,7 +17,7 @@ func NewInstant() Instant {
 
 // Elapsed returns the duration since the instant was created.
 func (i Instant) Elapsed() time.Duration {
-	return time.Duration(Instant(NanoTime()) - i)
+	return time.Duration(NewInstant() - i)
 }
 
 // Since returns the duration elapsed from another Instant, or zero is that Instant is later than this one.
