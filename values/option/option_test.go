@@ -166,6 +166,9 @@ type customScanner struct {
 }
 
 func (c *customScanner) Scan(src interface{}) error {
+	if src == nil {
+		return nil
+	}
 	c.S = src.(string)
 	return nil
 }
@@ -241,6 +244,12 @@ func TestSQLScanner(t *testing.T) {
 	err = custom.Scan("GOT HERE")
 	Equal(t, err, nil)
 	Equal(t, custom, Some(customScanner{S: "GOT HERE"}))
+
+	// custom scanner scan nil
+	var customNil Option[customScanner]
+	err = customNil.Scan(nil)
+	Equal(t, err, nil)
+	Equal(t, customNil, None[customScanner]())
 
 	// test unmarshal to struct
 	type myStruct struct {

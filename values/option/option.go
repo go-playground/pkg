@@ -145,6 +145,11 @@ func (o Option[T]) Value() (driver.Value, error) {
 // Scan implements the sql.Scanner interface.
 func (o *Option[T]) Scan(value any) error {
 
+	if value == nil {
+		*o = None[T]()
+		return nil
+	}
+
 	val := reflect.ValueOf(&o.value)
 
 	if val.Type().Implements(scanType) {
@@ -156,10 +161,6 @@ func (o *Option[T]) Scan(value any) error {
 		return nil
 	}
 
-	if value == nil {
-		*o = None[T]()
-		return nil
-	}
 	val = val.Elem()
 
 	switch val.Kind() {
