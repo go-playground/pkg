@@ -26,6 +26,37 @@ type testStructType struct {
 	Name string
 }
 
+func TestUnwraps(t *testing.T) {
+	none := None[int]()
+	PanicMatches(t, func() { none.Unwrap() }, "Option.Unwrap: option is None")
+
+	v := none.UnwrapOr(3)
+	Equal(t, 3, v)
+
+	v = none.UnwrapOrElse(func() int { return 2 })
+	Equal(t, 2, v)
+
+	v = none.UnwrapOrDefault()
+	Equal(t, 0, v)
+
+	// now test with a pointer type.
+	type myStruct struct {
+		S string
+	}
+
+	sNone := None[*myStruct]()
+	PanicMatches(t, func() { sNone.Unwrap() }, "Option.Unwrap: option is None")
+
+	v2 := sNone.UnwrapOr(&myStruct{S: "blah"})
+	Equal(t, &myStruct{S: "blah"}, v2)
+
+	v2 = sNone.UnwrapOrElse(func() *myStruct { return &myStruct{S: "blah 2"} })
+	Equal(t, &myStruct{S: "blah 2"}, v2)
+
+	v2 = sNone.UnwrapOrDefault()
+	Equal(t, nil, v2)
+}
+
 func TestSQLDriverValue(t *testing.T) {
 
 	var v valueTest

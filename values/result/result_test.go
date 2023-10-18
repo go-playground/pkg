@@ -5,12 +5,27 @@ package resultext
 
 import (
 	"errors"
+	"io"
 	"testing"
 
 	. "github.com/go-playground/assert/v2"
 )
 
 type myStruct struct{}
+
+func TestUnwrap(t *testing.T) {
+	er := Err[int, error](io.EOF)
+	PanicMatches(t, func() { er.Unwrap() }, "Result.Unwrap(): result is Err")
+
+	v := er.UnwrapOr(3)
+	Equal(t, 3, v)
+
+	v = er.UnwrapOrElse(func() int { return 2 })
+	Equal(t, 2, v)
+
+	v = er.UnwrapOrDefault()
+	Equal(t, 0, v)
+}
 
 func TestResult(t *testing.T) {
 	result := returnOk()
