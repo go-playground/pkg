@@ -38,6 +38,30 @@ func (r Result[T, E]) Unwrap() T {
 	panic("Result.Unwrap(): result is Err")
 }
 
+// UnwrapOr returns the contained Ok value or a provided default.
+//
+// Arguments passed to UnwrapOr are eagerly evaluated; if you are passing the result of a function call,
+// look to use `UnwrapOrElse`, which can be lazily evaluated.
+func (r Result[T, E]) UnwrapOr(value T) T {
+	if r.isOk {
+		return r.ok
+	}
+	return value
+}
+
+// UnwrapOrElse returns the contained Ok value or computes it from a provided function.
+func (r Result[T, E]) UnwrapOrElse(fn func() T) T {
+	if r.isOk {
+		return r.ok
+	}
+	return fn()
+}
+
+// UnwrapOrDefault returns the contained Ok value or the default value of the type T.
+func (r Result[T, E]) UnwrapOrDefault() T {
+	return r.ok
+}
+
 // Err returns the error of the result. To be used after calling IsOK()
 func (r Result[T, E]) Err() E {
 	return r.err
