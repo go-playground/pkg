@@ -93,6 +93,25 @@ func (o Option[T]) UnwrapOrDefault() T {
 	return o.value
 }
 
+// And calls the provided function with the contained value if the option is Some, return None otherwise.
+func (o Option[T]) And(fn func(T) T) Option[T] {
+	if o.isSome {
+		o.value = fn(o.value)
+	}
+	return o
+}
+
+// AndThen calls the provided function with the contained value if the option is Some, return None otherwise.
+//
+// This differs from `And` in that the provided function returns an Option[T] allowing changing of the Option itself if
+// manipulation of a Same value can be changes to a None.
+func (o Option[T]) AndThen(fn func(T) Option[T]) Option[T] {
+	if o.isSome {
+		return fn(o.value)
+	}
+	return o
+}
+
 // Some creates a new Option with the given values.
 func Some[T any](value T) Option[T] {
 	return Option[T]{value, true}
