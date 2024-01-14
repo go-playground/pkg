@@ -62,6 +62,25 @@ func (r Result[T, E]) UnwrapOrDefault() T {
 	return r.ok
 }
 
+// And calls the provided function with the contained value if the result is Ok, returns the Result value otherwise.
+func (r Result[T, E]) And(fn func(T) T) Result[T, E] {
+	if r.isOk {
+		r.ok = fn(r.ok)
+	}
+	return r
+}
+
+// AndThen calls the provided function with the contained value if the result is Ok, returns the Result value otherwise.
+//
+// This differs from `And` in that the provided function returns a Result[T, E] allowing changing of the Option value
+// itself.
+func (r Result[T, E]) AndThen(fn func(T) Result[T, E]) Result[T, E] {
+	if r.isOk {
+		return fn(r.ok)
+	}
+	return r
+}
+
 // Err returns the error of the result. To be used after calling IsOK()
 func (r Result[T, E]) Err() E {
 	return r.err
