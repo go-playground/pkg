@@ -26,6 +26,19 @@ type testStructType struct {
 	Name string
 }
 
+func TestAndXXX(t *testing.T) {
+	s := Some(1)
+	Equal(t, Some(3), s.And(func(i int) int { return 3 }))
+	Equal(t, Some(3), s.AndThen(func(i int) Option[int] { return Some(3) }))
+	Equal(t, None[int](), s.AndThen(func(i int) Option[int] { return None[int]() }))
+
+	n := None[int]()
+	Equal(t, None[int](), n.And(func(i int) int { return 3 }))
+	Equal(t, None[int](), n.AndThen(func(i int) Option[int] { return Some(3) }))
+	Equal(t, None[int](), n.AndThen(func(i int) Option[int] { return None[int]() }))
+	Equal(t, None[int](), s.AndThen(func(i int) Option[int] { return None[int]() }))
+}
+
 func TestUnwraps(t *testing.T) {
 	none := None[int]()
 	PanicMatches(t, func() { none.Unwrap() }, "Option.Unwrap: option is None")

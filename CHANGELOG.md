@@ -6,7 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [5.21.3] - 2023-10-18
+## [5.23.0] - 2024-01-14
+### Added
+- `And` and `AndThen` functions to `Option` & `Result` types.
+
+## [5.22.0] - 2023-10-18
 ### Added
  - `UnwrapOr`, `UnwrapOrElse` and `UnwrapOrDefault` functions to `Option` & `Result` types.
 
@@ -82,7 +86,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.22.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.23.0...HEAD
+[5.23.0]: https://github.com/go-playground/pkg/compare/v5.22.0..v5.23.0
 [5.22.0]: https://github.com/go-playground/pkg/compare/v5.21.3..v5.22.0
 [5.21.3]: https://github.com/go-playground/pkg/compare/v5.21.2..v5.21.3
 [5.21.2]: https://github.com/go-playground/pkg/compare/v5.21.1..v5.21.2

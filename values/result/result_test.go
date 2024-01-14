@@ -13,6 +13,19 @@ import (
 
 type myStruct struct{}
 
+func TestAndXXX(t *testing.T) {
+	ok := Ok[int, error](1)
+	Equal(t, Ok[int, error](3), ok.And(func(int) int { return 3 }))
+	Equal(t, Ok[int, error](3), ok.AndThen(func(int) Result[int, error] { return Ok[int, error](3) }))
+	Equal(t, Err[int, error](io.EOF), ok.AndThen(func(int) Result[int, error] { return Err[int, error](io.EOF) }))
+
+	err := Err[int, error](io.EOF)
+	Equal(t, Err[int, error](io.EOF), err.And(func(int) int { return 3 }))
+	Equal(t, Err[int, error](io.EOF), err.AndThen(func(int) Result[int, error] { return Ok[int, error](3) }))
+	Equal(t, Err[int, error](io.EOF), err.AndThen(func(int) Result[int, error] { return Err[int, error](io.ErrUnexpectedEOF) }))
+	Equal(t, Err[int, error](io.ErrUnexpectedEOF), ok.AndThen(func(int) Result[int, error] { return Err[int, error](io.ErrUnexpectedEOF) }))
+}
+
 func TestUnwrap(t *testing.T) {
 	er := Err[int, error](io.EOF)
 	PanicMatches(t, func() { er.Unwrap() }, "Result.Unwrap(): result is Err")
