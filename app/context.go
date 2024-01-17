@@ -2,7 +2,7 @@ package appext
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -79,23 +79,23 @@ func (c *contextBuilder) Build() context.Context {
 func listen(sig <-chan os.Signal, cancel context.CancelFunc, exitFn func(int), timeout time.Duration, forceExit bool) {
 	s := <-sig
 	cancel()
-	fmt.Printf("received shutdown signal %q\n", s)
+	log.Printf("received shutdown signal %q\n", s)
 
 	if timeout > 0 {
 		select {
 		case s := <-sig:
 			if forceExit {
-				fmt.Printf("received second shutdown signal %q, forcing exit\n", s)
+				log.Printf("received second shutdown signal %q, forcing exit\n", s)
 				exitFn(1)
 			}
 		case <-time.After(timeout):
-			fmt.Printf("timeout of %s reached, forcing exit\n", timeout)
+			log.Printf("timeout of %s reached, forcing exit\n", timeout)
 			exitFn(1)
 		}
 	} else {
 		s = <-sig
 		if forceExit {
-			fmt.Printf("received second shutdown signal %q, forcing exit\n", s)
+			log.Printf("received second shutdown signal %q, forcing exit\n", s)
 			exitFn(1)
 		}
 	}
