@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [5.24.0] - 2024-01-17
+## [5.24.0] - 2024-01-21
 ### Added
 - `appext` package for application level helpers. Specifically added setting up os signal trapping and cancellation of context.Context.
 
