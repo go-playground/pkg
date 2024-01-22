@@ -8,6 +8,7 @@ import (
 	"database/sql/driver"
 	"encoding/json"
 	"fmt"
+	"math"
 	"reflect"
 	"time"
 )
@@ -225,12 +226,43 @@ func (o *Option[T]) Scan(value any) error {
 			return err
 		}
 		*o = Some(reflect.ValueOf(v.Byte).Convert(val.Type()).Interface().(T))
+	case reflect.Uint16, reflect.Uint32, reflect.Uint64, reflect.Uint:
+		v := reflect.ValueOf(value)
+		if v.Type().ConvertibleTo(val.Type()) {
+			*o = Some(reflect.ValueOf(v.Convert(val.Type()).Interface()).Interface().(T))
+		} else {
+			return fmt.Errorf("value %T not convertable to %T", value, o.value)
+		}
+	case reflect.Float32:
+		var v sql.NullFloat64
+		if err := v.Scan(value); err != nil {
+			return err
+		}
+		*o = Some(reflect.ValueOf(v.Float64).Convert(val.Type()).Interface().(T))
 	case reflect.Float64:
 		var v sql.NullFloat64
 		if err := v.Scan(value); err != nil {
 			return err
 		}
 		*o = Some(reflect.ValueOf(v.Float64).Convert(val.Type()).Interface().(T))
+	case reflect.Int:
+		var v sql.NullInt64
+		if err := v.Scan(value); err != nil {
+			return err
+		}
+		if v.Int64 > math.MaxInt || v.Int64 < math.MinInt {
+			return fmt.Errorf("value %d out of range for int", v.Int64)
+		}
+		*o = Some(reflect.ValueOf(v.Int64).Convert(val.Type()).Interface().(T))
+	case reflect.Int8:
+		var v sql.NullInt64
+		if err := v.Scan(value); err != nil {
+			return err
+		}
+		if v.Int64 > math.MaxInt8 || v.Int64 < math.MinInt8 {
+			return fmt.Errorf("value %d out of range for int8", v.Int64)
+		}
+		*o = Some(reflect.ValueOf(v.Int64).Convert(val.Type()).Interface().(T))
 	case reflect.Int16:
 		var v sql.NullInt16
 		if err := v.Scan(value); err != nil {
@@ -285,8 +317,12 @@ func (o *Option[T]) Scan(value any) error {
 			v := reflect.ValueOf(value)
 
 			if v.Type().ConvertibleTo(byteSliceType) {
-				if err := json.Unmarshal(v.Convert(byteSliceType).Interface().([]byte), &o.value); err != nil {
-					return err
+				if val.Kind() == reflect.Slice && val.Type().Elem().Kind() == reflect.Uint8 {
+					*o = Some(reflect.ValueOf(v.Convert(val.Type()).Interface()).Interface().(T))
+				} else {
+					if err := json.Unmarshal(v.Convert(byteSliceType).Interface().([]byte), &o.value); err != nil {
+						return err
+					}
 				}
 				o.isSome = true
 				return nil
