@@ -6,6 +6,7 @@ package optionext
 import (
 	"database/sql/driver"
 	"encoding/json"
+	"math"
 	"reflect"
 	"testing"
 	"time"
@@ -222,12 +223,22 @@ func TestSQLScanner(t *testing.T) {
 	var optionI64 Option[int64]
 	var optionI32 Option[int32]
 	var optionI16 Option[int16]
+	var optionI8 Option[int8]
+	var optionI Option[int]
 	var optionString Option[string]
 	var optionBool Option[bool]
+	var optionF32 Option[float32]
 	var optionF64 Option[float64]
 	var optionByte Option[byte]
 	var optionTime Option[time.Time]
 	var optionInterface Option[any]
+	var optionArrBytes Option[[]byte]
+	var optionRawMessage Option[json.RawMessage]
+	var optionUint64 Option[uint64]
+	var optionUint32 Option[uint32]
+	var optionUint16 Option[uint16]
+	var optionUint8 Option[uint8]
+	var optionUint Option[uint]
 
 	err := optionInterface.Scan(1)
 	Equal(t, err, nil)
@@ -236,6 +247,29 @@ func TestSQLScanner(t *testing.T) {
 	err = optionInterface.Scan("blah")
 	Equal(t, err, nil)
 	Equal(t, optionInterface, Some(any("blah")))
+
+	err = optionUint64.Scan(uint64(200))
+	Equal(t, err, nil)
+	Equal(t, optionUint64, Some(uint64(200)))
+
+	err = optionUint32.Scan(uint32(200))
+	Equal(t, err, nil)
+	Equal(t, optionUint32, Some(uint32(200)))
+
+	err = optionUint16.Scan(uint16(200))
+	Equal(t, err, nil)
+	Equal(t, optionUint16, Some(uint16(200)))
+
+	err = optionUint8.Scan(uint8(200))
+	Equal(t, err, nil)
+	Equal(t, optionUint8, Some(uint8(200)))
+
+	err = optionUint.Scan(uint(200))
+	Equal(t, err, nil)
+	Equal(t, optionUint, Some(uint(200)))
+
+	err = optionUint64.Scan("200")
+	Equal(t, err.Error(), "value string not convertable to uint64")
 
 	err = optionI64.Scan(value)
 	Equal(t, err, nil)
@@ -249,6 +283,18 @@ func TestSQLScanner(t *testing.T) {
 	Equal(t, err, nil)
 	Equal(t, optionI16, Some(int16(value)))
 
+	err = optionI8.Scan(math.MaxInt32)
+	Equal(t, err.Error(), "value 2147483647 out of range for int8")
+	Equal(t, optionI8, None[int8]())
+
+	err = optionI8.Scan(int8(3))
+	Equal(t, err, nil)
+	Equal(t, optionI8, Some(int8(3)))
+
+	err = optionI.Scan(3)
+	Equal(t, err, nil)
+	Equal(t, optionI, Some(3))
+
 	err = optionBool.Scan(1)
 	Equal(t, err, nil)
 	Equal(t, optionBool, Some(true))
@@ -256,6 +302,14 @@ func TestSQLScanner(t *testing.T) {
 	err = optionString.Scan(value)
 	Equal(t, err, nil)
 	Equal(t, optionString, Some("123"))
+
+	err = optionF32.Scan(float32(2.0))
+	Equal(t, err, nil)
+	Equal(t, optionF32, Some(float32(2.0)))
+
+	err = optionF32.Scan(math.MaxFloat64)
+	Equal(t, err, nil)
+	Equal(t, optionF32, Some(float32(math.Inf(1))))
 
 	err = optionF64.Scan(2.0)
 	Equal(t, err, nil)
@@ -324,6 +378,22 @@ func TestSQLScanner(t *testing.T) {
 	err = ct.Scan("test")
 	Equal(t, err, nil)
 	Equal(t, ct, Some(customStringType("test")))
+
+	err = optionArrBytes.Scan([]byte(`[1,2,3]`))
+	Equal(t, err, nil)
+	Equal(t, optionArrBytes, Some([]byte(`[1,2,3]`)))
+
+	err = optionArrBytes.Scan([]byte{4, 5, 6})
+	Equal(t, err, nil)
+	Equal(t, optionArrBytes, Some([]byte{4, 5, 6}))
+
+	err = optionRawMessage.Scan([]byte(`[1,2,3]`))
+	Equal(t, err, nil)
+	Equal(t, true, string(optionRawMessage.Unwrap()) == "[1,2,3]")
+
+	err = optionRawMessage.Scan([]byte{4, 5, 6})
+	Equal(t, err, nil)
+	Equal(t, true, string(optionRawMessage.Unwrap()) == string([]byte{4, 5, 6}))
 }
 
 func TestNilOption(t *testing.T) {
