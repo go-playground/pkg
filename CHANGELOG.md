@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.26.0] - 2024-01-28
+### Added
+- `stringsext.Join` a more ergonomic way to join strings with a separator when you don't have a slice of strings.
+
 ## [5.25.0] - 2024-01-22
 ### Added
 - Add additional `Option.Scan` type support for `sql.Scanner` interface of Uint, Uint16, Uint32, Uint64, Int, Int, Int8, Float32, []byte, json.RawValue.
@@ -94,7 +98,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.25.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.26.0...HEAD
+[5.26.0]: https://github.com/go-playground/pkg/compare/v5.25.0..v5.26.0
 [5.25.0]: https://github.com/go-playground/pkg/compare/v5.24.0..v5.25.0
 [5.24.0]: https://github.com/go-playground/pkg/compare/v5.23.0..v5.24.0
 [5.23.0]: https://github.com/go-playground/pkg/compare/v5.22.0..v5.23.0
