@@ -4,37 +4,38 @@
 package sliceext
 
 import (
-	optionext "github.com/go-playground/pkg/v5/values/option"
 	"sort"
+
+	optionext "github.com/go-playground/pkg/v5/values/option"
 )
 
 // Retain retains only the elements specified by the function.
 //
-// This shuffles and returns the retained values of the slice.
+// This returns a new slice with references to the underlying data instead of shuffling.
 func Retain[T any](slice []T, fn func(v T) bool) []T {
-	var j int
+	results := make([]T, 0, len(slice))
 	for _, v := range slice {
+		v := v
 		if fn(v) {
-			slice[j] = v
-			j++
+			results = append(results, v)
 		}
 	}
-	return slice[:j]
+	return results
 }
 
 // Filter filters out the elements specified by the function.
 //
-// This shuffles and returns the retained values of the slice.
+// This returns a new slice with references to the underlying data instead of shuffling.
 func Filter[T any](slice []T, fn func(v T) bool) []T {
-	var j int
+	results := make([]T, 0, len(slice))
 	for _, v := range slice {
+		v := v
 		if fn(v) {
 			continue
 		}
-		slice[j] = v
-		j++
+		results = append(results, v)
 	}
-	return slice[:j]
+	return results
 }
 
 // Map maps a slice of []T -> []U using the map function.

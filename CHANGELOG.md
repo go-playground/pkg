@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.27.0] - 2024-01-29
+### Changed
+- `sliceext.Retain` & `sliceext.Filter` to not shuffle data in the underlying slice array but create new slice referencing the data instead. In practice, it can cause unexpected behaviour and users expectations not met when the same data is also referenced elsewhere. If anyone still requires a `shuffle` implementation for efficiency I'd be happy to add a separate function for that as well.
+
 ## [5.26.0] - 2024-01-28
 ### Added
 - `stringsext.Join` a more ergonomic way to join strings with a separator when you don't have a slice of strings.
