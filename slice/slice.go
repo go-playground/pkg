@@ -11,7 +11,7 @@ import (
 
 // Retain retains only the elements specified by the function.
 //
-// This shuffles and returns the retained values of the slice.
+// This returns a new slice with references to the underlying data instead of shuffling.
 func Retain[T any](slice []T, fn func(v T) bool) []T {
 	results := make([]T, 0, len(slice))
 	for _, v := range slice {
@@ -25,7 +25,7 @@ func Retain[T any](slice []T, fn func(v T) bool) []T {
 
 // Filter filters out the elements specified by the function.
 //
-// This shuffles and returns the retained values of the slice.
+// This returns a new slice with references to the underlying data instead of shuffling.
 func Filter[T any](slice []T, fn func(v T) bool) []T {
 	results := make([]T, 0, len(slice))
 	for _, v := range slice {
