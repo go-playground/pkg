@@ -6,11 +6,12 @@ package httpext
 import (
 	"context"
 	"fmt"
-	bytesext "github.com/go-playground/pkg/v5/bytes"
-	errorsext "github.com/go-playground/pkg/v5/errors"
-	resultext "github.com/go-playground/pkg/v5/values/result"
 	"net/http"
 	"strconv"
+
+	bytesext "github.com/go-playground/pkg/v5/bytes"
+	errorsext "github.com/go-playground/pkg/v5/errors"
+	. "github.com/go-playground/pkg/v5/values/result"
 )
 
 var (
@@ -59,7 +60,7 @@ type BuildRequestFn func(ctx context.Context) (*http.Request, error)
 type IsRetryableStatusCodeFn func(code int) bool
 
 // DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
-func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, buildFn BuildRequestFn) resultext.Result[*http.Response, error] {
+func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, buildFn BuildRequestFn) Result[*http.Response, error] {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -67,7 +68,7 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 	for {
 		req, err := buildFn(ctx)
 		if err != nil {
-			return resultext.Err[*http.Response, error](err)
+			return Err[*http.Response, error](err)
 		}
 
 		resp, err := client.Do(req)
@@ -75,23 +76,23 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 			if retryReason, isRetryable := errorsext.IsRetryableHTTP(err); isRetryable {
 				opt := onRetryFn(ctx, err, retryReason, attempt)
 				if opt.IsSome() {
-					return resultext.Err[*http.Response, error](opt.Unwrap())
+					return Err[*http.Response, error](opt.Unwrap())
 				}
 				attempt++
 				continue
 			}
-			return resultext.Err[*http.Response, error](err)
+			return Err[*http.Response, error](err)
 		}
 
 		if isRetryableStatusCode(resp.StatusCode) {
 			opt := onRetryFn(ctx, ErrRetryableStatusCode{Response: resp}, strconv.Itoa(resp.StatusCode), attempt)
 			if opt.IsSome() {
-				return resultext.Err[*http.Response, error](opt.Unwrap())
+				return Err[*http.Response, error](opt.Unwrap())
 			}
 			attempt++
 			continue
 		}
-		return resultext.Ok[*http.Response, error](resp)
+		return Ok[*http.Response, error](resp)
 	}
 }
 
@@ -101,25 +102,25 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 // Gzip supported:
 // - JSON
 // - XML
-func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, buildFn BuildRequestFn) resultext.Result[T, error] {
+func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, buildFn BuildRequestFn) Result[T, error] {
 
-	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) resultext.Result[T, error] {
+	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) Result[T, error] {
 
 		result := DoRetryableResponse(ctx, onRetryFn, isRetryableStatusCode, client, buildFn)
 		if result.IsErr() {
-			return resultext.Err[T, error](result.Err())
+			return Err[T, error](result.Err())
 		}
 		resp := result.Unwrap()
 
 		if resp.StatusCode != expectedResponseCode {
-			return resultext.Err[T, error](ErrUnexpectedResponse{Response: resp})
+			return Err[T, error](ErrUnexpectedResponse{Response: resp})
 		}
 		defer resp.Body.Close()
 
 		data, err := DecodeResponse[T](resp, maxMemory)
 		if err != nil {
-			return resultext.Err[T, error](err)
+			return Err[T, error](err)
 		}
-		return resultext.Ok[T, error](data)
+		return Ok[T, error](data)
 	})
 }
