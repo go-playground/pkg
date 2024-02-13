@@ -59,7 +59,7 @@ func AcceptedLanguages(r *http.Request) (languages []string) {
 	return
 }
 
-// Attachment is a helper method for returning an attachement file
+// Attachment is a helper method for returning an attachment file
 // to be downloaded, if you with to open inline see function Inline
 func Attachment(w http.ResponseWriter, r io.Reader, filename string) (err error) {
 	w.Header().Set(ContentDisposition, "attachment;filename="+filename)
@@ -79,7 +79,7 @@ func Inline(w http.ResponseWriter, r io.Reader, filename string) (err error) {
 	return
 }
 
-// ClientIP implements a best effort algorithm to return the real client IP, it parses
+// ClientIP implements the best effort algorithm to return the real client IP, it parses
 // X-Real-IP and X-Forwarded-For in order to work properly with reverse-proxies such us: nginx or haproxy.
 func ClientIP(r *http.Request) (clientIP string) {
 	values := r.Header[XRealIP]
@@ -103,7 +103,7 @@ func ClientIP(r *http.Request) (clientIP string) {
 	return
 }
 
-// JSONStream uses json.Encoder to stream the JSON reponse body.
+// JSONStream uses json.Encoder to stream the JSON response body.
 //
 // This differs from the JSON helper which unmarshalls into memory first allowing the capture of JSON encoding errors.
 func JSONStream(w http.ResponseWriter, status int, i interface{}) error {
