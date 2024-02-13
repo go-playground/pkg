@@ -1,11 +1,12 @@
-//go:build go1.18
-// +build go1.18
+//go:build go1.18 && !go1.21
+// +build go1.18,!go1.21
 
 package mathext
 
 import (
-	constraintsext "github.com/go-playground/pkg/v5/constraints"
 	"math"
+
+	constraintsext "github.com/go-playground/pkg/v5/constraints"
 )
 
 // Min returns the smaller value.
