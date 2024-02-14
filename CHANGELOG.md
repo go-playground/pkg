@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.28.1] - 2024-02-14
+### Fixed
+- Additional supported types, cast to `sql.Valuer` supported types, they need to be returned to the driver for evaluation.
+
 ## [5.28.0] - 2024-02-13
 ### Added
 - Additionally supported types, cast to `sql.Valuer` supported types.
@@ -116,7 +120,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.28.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.28.1...HEAD
+[5.28.1]: https://github.com/go-playground/pkg/compare/v5.28.0..v5.28.1
 [5.28.0]: https://github.com/go-playground/pkg/compare/v5.27.0..v5.28.0
 [5.27.0]: https://github.com/go-playground/pkg/compare/v5.26.0..v5.27.0
 [5.26.0]: https://github.com/go-playground/pkg/compare/v5.25.0..v5.26.0
