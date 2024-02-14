@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.28.0] - 2024-02-13
+### Added
+- Additionally supported types, cast to `sql.Valuer` supported types.
+
+### Changed
+- Option scan to take advantage of new `sql.Null` and `reflect.TypeFor` for go1.22+.
+- `BytesToString` & `StringToBytes` to use `unsafe.String` & `unsafe.Slice` for go1.21+.
+
+### Deprecated
+- `mathext.Min` & `mathext.Max` in favour of std lib min & max.
+
+### Fixed
+- Some documentation typos.
+
 ## [5.27.0] - 2024-01-29
 ### Changed
 - `sliceext.Retain` & `sliceext.Filter` to not shuffle data in the underlying slice array but create new slice referencing the data instead. In practice, it can cause unexpected behaviour and users expectations not met when the same data is also referenced elsewhere. If anyone still requires a `shuffle` implementation for efficiency I'd be happy to add a separate function for that as well.
@@ -102,7 +116,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.26.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.28.0...HEAD
+[5.28.0]: https://github.com/go-playground/pkg/compare/v5.27.0..v5.28.0
+[5.27.0]: https://github.com/go-playground/pkg/compare/v5.26.0..v5.27.0
 [5.26.0]: https://github.com/go-playground/pkg/compare/v5.25.0..v5.26.0
 [5.25.0]: https://github.com/go-playground/pkg/compare/v5.24.0..v5.25.0
 [5.24.0]: https://github.com/go-playground/pkg/compare/v5.23.0..v5.24.0
