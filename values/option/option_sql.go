@@ -20,7 +20,6 @@ var (
 	timeType      = reflect.TypeOf((*time.Time)(nil)).Elem()
 	stringType    = reflect.TypeOf((*string)(nil)).Elem()
 	int64Type     = reflect.TypeOf((*int64)(nil)).Elem()
-	uInt64Type    = reflect.TypeOf((*uint64)(nil)).Elem()
 	float64Type   = reflect.TypeOf((*float64)(nil)).Elem()
 	boolType      = reflect.TypeOf((*bool)(nil)).Elem()
 )
@@ -43,15 +42,9 @@ func (o Option[T]) Value() (driver.Value, error) {
 		return val.Convert(stringType).Interface(), nil
 	case reflect.Bool:
 		return val.Convert(boolType).Interface(), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		n := val.Convert(uInt64Type).Interface().(uint64)
-		if n > math.MaxInt64 {
-			return math.MaxInt64, nil
-		}
-		return int64(n), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return val.Convert(int64Type).Interface(), nil
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64:
 		return val.Convert(float64Type).Interface(), nil
 	case reflect.Slice, reflect.Array:
 		if val.Type().ConvertibleTo(byteSliceType) {

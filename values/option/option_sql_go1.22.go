@@ -19,7 +19,6 @@ var (
 	timeType      = reflect.TypeFor[time.Time]()
 	stringType    = reflect.TypeFor[string]()
 	int64Type     = reflect.TypeFor[int64]()
-	uInt64Type    = reflect.TypeFor[uint64]()
 	float64Type   = reflect.TypeFor[float64]()
 	boolType      = reflect.TypeFor[bool]()
 )
@@ -42,15 +41,9 @@ func (o Option[T]) Value() (driver.Value, error) {
 		return val.Convert(stringType).Interface(), nil
 	case reflect.Bool:
 		return val.Convert(boolType).Interface(), nil
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		n := val.Convert(uInt64Type).Interface().(uint64)
-		if n > math.MaxInt64 {
-			return math.MaxInt64, nil
-		}
-		return int64(n), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return val.Convert(int64Type).Interface(), nil
-	case reflect.Float32, reflect.Float64:
+	case reflect.Float64:
 		return val.Convert(float64Type).Interface(), nil
 	case reflect.Slice, reflect.Array:
 		if val.Type().ConvertibleTo(byteSliceType) {
