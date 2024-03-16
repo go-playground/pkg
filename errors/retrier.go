@@ -22,8 +22,8 @@ const (
 	// MaxAttemptsTotal will apply the max attempts to all errors, even those determined to be retryable.
 	MaxAttemptsTotal
 
-	// MaxAttemptsInfinite will not apply a maximum number of attempts.
-	MaxAttemptsInfinite
+	// MaxAttemptsUnlimited will not apply a maximum number of attempts.
+	MaxAttemptsUnlimited
 )
 
 // BackoffFn is a function used to apply a backoff strategy to the retryable function.
@@ -78,13 +78,13 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 	for {
 		result := fn(ctx)
 		if result.IsErr() {
-			if r.maxAttemptsMode != MaxAttemptsInfinite && maxAttempts == 0 {
+			if r.maxAttemptsMode != MaxAttemptsUnlimited && maxAttempts == 0 {
 				return result
 			}
 			if r.isRetryableFn(result.Err()) {
 				if r.maxAttemptsMode == MaxAttemptsNonRetryableReset {
 					maxAttempts = r.maxAttempts
-				} else if r.maxAttemptsMode != MaxAttemptsInfinite {
+				} else if r.maxAttemptsMode != MaxAttemptsUnlimited {
 					maxAttempts--
 				}
 				r.bo(ctx, attempt)
