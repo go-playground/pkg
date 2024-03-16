@@ -84,7 +84,7 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			if r.isRetryableFn(result.Err()) {
 				if r.maxAttemptsMode == MaxAttemptsNonRetryableReset {
 					maxAttempts = r.maxAttempts
-				} else {
+				} else if r.maxAttemptsMode != MaxAttemptsInfinite {
 					maxAttempts--
 				}
 				r.bo(ctx, attempt)
