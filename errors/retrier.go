@@ -19,8 +19,8 @@ const (
 	// MaxAttemptsNonRetryable will apply the max attempts to all errors not determined to be retryable.
 	MaxAttemptsNonRetryable
 
-	// MaxAttemptsTotal will apply the max attempts to all errors, even those determined to be retryable.
-	MaxAttemptsTotal
+	// MaxAttempts will apply the max attempts to all errors, even those determined to be retryable.
+	MaxAttempts
 
 	// MaxAttemptsUnlimited will not apply a maximum number of attempts.
 	MaxAttemptsUnlimited
