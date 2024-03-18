@@ -2,6 +2,7 @@ package errorsext
 
 import (
 	"context"
+	"time"
 
 	. "github.com/go-playground/pkg/v5/values/result"
 )
@@ -46,7 +47,14 @@ func NewRetryer[T, E any]() Retryer[T, E] {
 		isRetryableFn:   func(_ context.Context, _ E) bool { return false },
 		maxAttemptsMode: MaxAttemptsNonRetryableReset,
 		maxAttempts:     5,
-		bo:              func(ctx context.Context, attempt int) {},
+		bo: func(ctx context.Context, attempt int) {
+			t := time.NewTimer(time.Millisecond * 200)
+			defer t.Stop()
+			select {
+			case <-ctx.Done():
+			case <-t.C:
+			}
+		},
 	}
 }
 
