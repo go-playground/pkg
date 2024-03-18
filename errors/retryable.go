@@ -42,6 +42,9 @@ func IsRetryableHTTP(err error) (retryType string, isRetryable bool) {
 // IsRetryableNetwork returns if the provided error is a retryable network related error. It also returns the
 // type, in string form, for optional logging and metrics use.
 func IsRetryableNetwork(err error) (retryType string, isRetryable bool) {
+	if retryable(err) {
+		return "retryable", true
+	}
 	if IsTemporary(err) {
 		return "temporary", true
 	}
@@ -49,6 +52,16 @@ func IsRetryableNetwork(err error) (retryType string, isRetryable bool) {
 		return "timeout", true
 	}
 	return IsTemporaryConnection(err)
+}
+
+func retryable(err error) bool {
+	var t interface{ IsRetryable() bool }
+	if errors.As(err, &t) && t.IsRetryable() {
+		return true
+	}
+
+	var t2 interface{ Retryable() bool }
+	return errors.As(err, &t2) && t2.Retryable()
 }
 
 // IsTemporary returns true if the provided error is considered retryable temporary error by testing if it
