@@ -31,7 +31,7 @@ func TestRetrierMaxAttempts(t *testing.T) {
 func TestRetrierMaxAttemptsNonRetryable(t *testing.T) {
 	var i, j int
 	returnErr := io.ErrUnexpectedEOF
-	result := NewRetryer[int, error]().IsRetryableFn(func(e error) (isRetryable bool) {
+	result := NewRetryer[int, error]().IsRetryableFn(func(_ context.Context, e error) (isRetryable bool) {
 		if returnErr == io.EOF {
 			return false
 		} else {
@@ -58,7 +58,7 @@ func TestRetrierMaxAttemptsNonRetryable(t *testing.T) {
 func TestRetrierMaxAttemptsNonRetryableReset(t *testing.T) {
 	var i, j int
 	returnErr := io.EOF
-	result := NewRetryer[int, error]().IsRetryableFn(func(e error) (isRetryable bool) {
+	result := NewRetryer[int, error]().IsRetryableFn(func(_ context.Context, e error) (isRetryable bool) {
 		if returnErr == io.EOF {
 			return false
 		} else {

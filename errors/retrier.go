@@ -30,7 +30,7 @@ const (
 type BackoffFn func(ctx context.Context, attempt int)
 
 // IsRetryableFn2 is called to determine if the type E is retryable.
-type IsRetryableFn2[E any] func(e E) (isRetryable bool)
+type IsRetryableFn2[E any] func(ctx context.Context, e E) (isRetryable bool)
 
 // Retryer is used to retry any fallible operation.
 type Retryer[T, E any] struct {
@@ -43,7 +43,7 @@ type Retryer[T, E any] struct {
 // NewRetryer returns a new `Retryer` with sane default values.
 func NewRetryer[T, E any]() Retryer[T, E] {
 	return Retryer[T, E]{
-		isRetryableFn:   func(_ E) bool { return false },
+		isRetryableFn:   func(_ context.Context, _ E) bool { return false },
 		maxAttemptsMode: MaxAttemptsNonRetryableReset,
 		maxAttempts:     5,
 		bo:              func(ctx context.Context, attempt int) {},
@@ -78,7 +78,7 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 	for {
 		result := fn(ctx)
 		if result.IsErr() {
-			isRetryable := r.isRetryableFn(result.Err())
+			isRetryable := r.isRetryableFn(ctx, result.Err())
 
 			switch r.maxAttemptsMode {
 			case MaxAttemptsUnlimited:
