@@ -4,6 +4,7 @@ import (
 	"context"
 	"io"
 	"testing"
+	"time"
 
 	. "github.com/go-playground/assert/v2"
 	. "github.com/go-playground/pkg/v5/values/result"
@@ -99,4 +100,19 @@ func TestRetrierMaxAttemptsUnlimited(t *testing.T) {
 			return Err[int, error](io.EOF)
 		})
 	}, "infinite loop")
+}
+
+func TestRetrierMaxAttemptsTimeout(t *testing.T) {
+	result := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int) {
+	}).MaxAttempts(MaxAttempts, 1).Timeout(time.Second).
+		Do(context.Background(), func(ctx context.Context) Result[int, error] {
+			select {
+			case <-ctx.Done():
+				return Err[int, error](ctx.Err())
+			case <-time.After(time.Second * 3):
+				return Err[int, error](io.EOF)
+			}
+		})
+	Equal(t, result.IsErr(), true)
+	Equal(t, result.Err(), context.DeadlineExceeded)
 }

@@ -39,6 +39,7 @@ type Retryer[T, E any] struct {
 	maxAttemptsMode MaxAttemptsMode
 	maxAttempts     uint8
 	bo              BackoffFn
+	timeout         time.Duration
 }
 
 // NewRetryer returns a new `Retryer` with sane default values.
@@ -79,12 +80,29 @@ func (r Retryer[T, E]) Backoff(fn BackoffFn) Retryer[T, E] {
 	return r
 }
 
+// Timeout sets the timeout for the `Retryer`. This is the timeout per `RetyableFn` attempt and not the entirety
+// of the `Retryer` execution.
+//
+// A timeout of 0 will disable the timeout and is the default.
+func (r Retryer[T, E]) Timeout(timeout time.Duration) Retryer[T, E] {
+	r.timeout = timeout
+	return r
+}
+
 // Do will execute the provided functions code and automatically retry using the provided retry function.
 func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E] {
 	var attempt int
 	remaining := r.maxAttempts
 	for {
-		result := fn(ctx)
+		var result Result[T, E]
+		if r.timeout == 0 {
+			result = fn(ctx)
+		} else {
+
+			ctx, cancel := context.WithTimeout(ctx, r.timeout)
+			result = fn(ctx)
+			cancel()
+		}
 		if result.IsErr() {
 			isRetryable := r.isRetryableFn(ctx, result.Err())
 
