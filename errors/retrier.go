@@ -74,24 +74,43 @@ func (r Retryer[T, E]) Backoff(fn BackoffFn) Retryer[T, E] {
 // Do will execute the provided functions code and automatically retry using the provided retry function.
 func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E] {
 	var attempt int
-	maxAttempts := r.maxAttempts
+	remaining := r.maxAttempts
 	for {
 		result := fn(ctx)
 		if result.IsErr() {
-			if r.maxAttemptsMode != MaxAttemptsUnlimited && maxAttempts == 0 {
+			isRetryable := r.isRetryableFn(result.Err())
+
+			switch r.maxAttemptsMode {
+			case MaxAttemptsUnlimited:
+				goto END
+			case MaxAttemptsNonRetryableReset:
+				if isRetryable {
+					remaining = r.maxAttempts
+				} else {
+					remaining = decrement(remaining)
+				}
+			case MaxAttemptsNonRetryable:
+				if !isRetryable {
+					remaining = decrement(remaining)
+				}
+			case MaxAttempts:
+				remaining = decrement(remaining)
+			}
+			if remaining == 0 {
 				return result
 			}
-			if r.isRetryableFn(result.Err()) {
-				if r.maxAttemptsMode == MaxAttemptsNonRetryableReset {
-					maxAttempts = r.maxAttempts
-				} else if r.maxAttemptsMode != MaxAttemptsUnlimited {
-					maxAttempts--
-				}
-				r.bo(ctx, attempt)
-				attempt++
-				continue
-			}
+		END:
+			r.bo(ctx, attempt)
+			attempt++
+			continue
 		}
 		return result
 	}
+}
+
+func decrement(i uint8) uint8 {
+	if i == 0 {
+		return 0
+	}
+	return i - 1
 }
