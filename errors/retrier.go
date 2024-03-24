@@ -33,9 +33,16 @@ type BackoffFn func(ctx context.Context, attempt int)
 // IsRetryableFn2 is called to determine if the type E is retryable.
 type IsRetryableFn2[E any] func(ctx context.Context, e E) (isRetryable bool)
 
+// EarlyReturnFn is the function that can be used to bypass all retry logic, no matter the MaxAttemptsMode, for when the
+// type of `E` will never succeed and should not be retried.
+//
+// eg. If retrying an HTTP request and getting 400 Bad Request, it's unlikely to ever succeed and should not be retried.
+type EarlyReturnFn[E any] func(ctx context.Context, e E) (earlyReturn bool)
+
 // Retryer is used to retry any fallible operation.
 type Retryer[T, E any] struct {
 	isRetryableFn   IsRetryableFn2[E]
+	isEarlyReturnFn EarlyReturnFn[E]
 	maxAttemptsMode MaxAttemptsMode
 	maxAttempts     uint8
 	bo              BackoffFn
@@ -53,6 +60,7 @@ type Retryer[T, E any] struct {
 // - `MaxAttempts` is 5.
 // - `BackoffFn` will sleep for 200ms. It's recommended to use exponential backoff for production.
 // - `Timeout` is 0.
+// - `EarlyReturnFn` will be None.
 func NewRetryer[T, E any]() Retryer[T, E] {
 	return Retryer[T, E]{
 		isRetryableFn:   func(_ context.Context, _ E) bool { return false },
@@ -75,6 +83,14 @@ func (r Retryer[T, E]) IsRetryableFn(fn IsRetryableFn2[E]) Retryer[T, E] {
 		fn = func(_ context.Context, _ E) bool { return false }
 	}
 	r.isRetryableFn = fn
+	return r
+}
+
+// IsEarlyReturnFn sets the `EarlyReturnFn` for the `Retryer`.
+//
+// NOTE: If the `EarlyReturnFn` and `IsRetryableFn` are both set and a conflicting `IsRetryableFn` will take precedence.
+func (r Retryer[T, E]) IsEarlyReturnFn(fn EarlyReturnFn[E]) Retryer[T, E] {
+	r.isEarlyReturnFn = fn
 	return r
 }
 
@@ -119,6 +135,9 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 		}
 		if result.IsErr() {
 			isRetryable := r.isRetryableFn(ctx, result.Err())
+			if !isRetryable && r.isEarlyReturnFn != nil && r.isEarlyReturnFn(ctx, result.Err()) {
+				return result
+			}
 
 			switch r.maxAttemptsMode {
 			case MaxAttemptsUnlimited:

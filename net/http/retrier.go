@@ -2,6 +2,7 @@ package httpext
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"strconv"
 	"time"
@@ -42,6 +43,7 @@ type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
 type Retryer struct {
 	isRetryableFn           errorsext.IsRetryableFn2[error]
 	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
+	isEarlyReturnFn         errorsext.EarlyReturnFn[error]
 	decodeFn                DecodeAnyFn
 	backoffFn               errorsext.BackoffFn
 	client                  *http.Client
@@ -60,6 +62,7 @@ type Retryer struct {
 // - `BackoffFn` will sleep for 200ms. It's recommended to use exponential backoff for production.
 // - `Timeout` is 0.
 // - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
+// - `IsEarlyReturnFn` is set to check if the error is an `ErrStatusCode` and if the status code is non-retryable.
 // - `Client` is set to `http.DefaultClient`.
 // - `MaxMemory` is set to 2MiB.
 // - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
@@ -70,6 +73,13 @@ func NewRetryer() Retryer {
 			return
 		},
 		isRetryableStatusCodeFn: func(_ context.Context, code int) bool { return IsRetryableStatusCode(code) },
+		isEarlyReturnFn: func(_ context.Context, err error) bool {
+			var sce ErrStatusCode
+			if errors.As(err, &sce) {
+				return IsNonRetryableStatusCode(sce.StatusCode)
+			}
+			return false
+		},
 		decodeFn: func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error {
 			err := DecodeResponseAny(resp, maxMemory, v)
 			if err != nil {
@@ -110,6 +120,12 @@ func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer {
 		fn = func(_ context.Context, _ int) bool { return false }
 	}
 	r.isRetryableStatusCodeFn = fn
+	return r
+}
+
+// IsEarlyReturnFn sets the `EarlyReturnFn` for the `Retryer`.
+func (r Retryer) IsEarlyReturnFn(fn errorsext.EarlyReturnFn[error]) Retryer {
+	r.isEarlyReturnFn = fn
 	return r
 }
 
@@ -163,6 +179,7 @@ func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedRes
 		MaxAttempts(r.mode, r.maxAttempts).
 		Backoff(r.backoffFn).
 		Timeout(r.timeout).
+		IsEarlyReturnFn(r.isEarlyReturnFn).
 		Do(ctx, func(ctx context.Context) Result[*http.Response, error] {
 			req := fn(ctx)
 			if req.IsErr() {
@@ -194,6 +211,7 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 		MaxAttempts(r.mode, r.maxAttempts).
 		Backoff(r.backoffFn).
 		Timeout(r.timeout).
+		IsEarlyReturnFn(r.isEarlyReturnFn).
 		Do(ctx, func(ctx context.Context) Result[typesext.Nothing, error] {
 			req := fn(ctx)
 			if req.IsErr() {

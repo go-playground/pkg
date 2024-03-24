@@ -2,12 +2,12 @@ package httpext
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	. "github.com/go-playground/assert/v2"
+	errorsext "github.com/go-playground/pkg/v5/errors"
 	. "github.com/go-playground/pkg/v5/values/result"
 )
 
@@ -77,7 +77,6 @@ func TestRetryer_SuccessWithRetries(t *testing.T) {
 		}
 		return Ok[*http.Request, error](req)
 	}, http.StatusOK)
-	fmt.Println(result.Err())
 	Equal(t, result.IsOk(), true)
 	Equal(t, result.Unwrap().StatusCode, http.StatusOK)
 	defer result.Unwrap().Body.Close()
@@ -94,4 +93,38 @@ func TestRetryer_SuccessWithRetries(t *testing.T) {
 	}, &responseResult, http.StatusOK)
 	Equal(t, err, nil)
 	Equal(t, responseResult, tst)
+}
+
+func TestRetryer_FailureMaxRetries(t *testing.T) {
+	ctx := context.Background()
+
+	type Test struct {
+		Name string
+	}
+
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer server.Close()
+
+	retryer := NewRetryer().Backoff(nil).MaxAttempts(errorsext.MaxAttempts, 2)
+
+	result := retryer.DoResponse(ctx, func(ctx context.Context) Result[*http.Request, error] {
+		req, err := http.NewRequestWithContext(ctx, "GET", server.URL, nil)
+		if err != nil {
+			return Err[*http.Request, error](err)
+		}
+		return Ok[*http.Request, error](req)
+	}, http.StatusOK)
+	Equal(t, result.IsErr(), true)
+
+	var responseResult Test
+	err := retryer.Do(ctx, func(ctx context.Context) Result[*http.Request, error] {
+		req, err := http.NewRequestWithContext(ctx, "GET", server.URL, nil)
+		if err != nil {
+			return Err[*http.Request, error](err)
+		}
+		return Ok[*http.Request, error](req)
+	}, &responseResult, http.StatusOK)
+	NotEqual(t, err, nil)
 }
