@@ -32,8 +32,8 @@ func (e ErrStatusCode) IsRetryable() bool {
 // BuildRequestFn2 is a function used to rebuild an HTTP request for use in retryable code.
 type BuildRequestFn2 func(ctx context.Context) Result[*http.Request, error]
 
-// DecodeFn is a function used to decode the response body into the desired type.
-type DecodeFn func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error
+// DecodeAnyFn is a function used to decode the response body into the desired type.
+type DecodeAnyFn func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error
 
 // IsRetryableStatusCodeFn2 is a function used to determine if the provided status code is considered retryable.
 type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
@@ -42,7 +42,7 @@ type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
 type Retryer struct {
 	isRetryableFn           errorsext.IsRetryableFn2[error]
 	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
-	decodeFn                DecodeFn
+	decodeFn                DecodeAnyFn
 	backoffFn               errorsext.BackoffFn
 	client                  *http.Client
 	timeout                 time.Duration
@@ -62,7 +62,7 @@ type Retryer struct {
 // - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
 // - `Client` is set to `http.DefaultClient`.
 // - `MaxMemory` is set to 2MiB.
-// - `DecodeFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
+// - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
 func NewRetryer() Retryer {
 	return Retryer{
 		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
@@ -101,7 +101,7 @@ func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer {
 }
 
 // DecodeFn sets the decode function for the `Retryer`.
-func (r Retryer) DecodeFn(fn DecodeFn) Retryer {
+func (r Retryer) DecodeFn(fn DecodeAnyFn) Retryer {
 	r.decodeFn = fn
 	return r
 }
