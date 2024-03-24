@@ -77,8 +77,18 @@ func NewRetryer() Retryer {
 			}
 			return nil
 		},
-		client:    http.DefaultClient,
-		maxMemory: 2 * bytesext.MiB,
+		client:      http.DefaultClient,
+		maxMemory:   2 * bytesext.MiB,
+		mode:        errorsext.MaxAttemptsNonRetryableReset,
+		maxAttempts: 5,
+		backoffFn: func(ctx context.Context, attempt int) {
+			t := time.NewTimer(time.Millisecond * 200)
+			defer t.Stop()
+			select {
+			case <-ctx.Done():
+			case <-t.C:
+			}
+		},
 	}
 }
 
