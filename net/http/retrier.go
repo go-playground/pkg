@@ -33,10 +33,13 @@ type BuildRequestFn2 func(ctx context.Context) Result[*http.Request, error]
 // DecodeFn is a function used to decode the response body into the desired type.
 type DecodeFn[T any] func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes) Result[T, error]
 
+// IsRetryableStatusCodeFn2 is a function used to determine if the provided status code is considered retryable.
+type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
+
 // Retryer is used to retry any fallible operation.
 type Retryer[T any] struct {
 	isRetryableFn           errorsext.IsRetryableFn2[error]
-	isRetryableStatusCodeFn IsRetryableStatusCodeFn
+	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
 	decodeFn                DecodeFn[T]
 	backoffFn               errorsext.BackoffFn
 	client                  *http.Client
@@ -64,7 +67,7 @@ func NewRetryer[T any]() Retryer[T] {
 			_, isRetryable = errorsext.IsRetryableHTTP(err)
 			return
 		},
-		isRetryableStatusCodeFn: IsRetryableStatusCode,
+		isRetryableStatusCodeFn: func(_ context.Context, code int) bool { return IsRetryableStatusCode(code) },
 		decodeFn: func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes) Result[T, error] {
 			data, err := DecodeResponse[T](resp, maxMemory)
 			if err != nil {
@@ -90,7 +93,7 @@ func (r Retryer[T]) IsRetryableFn(fn errorsext.IsRetryableFn2[error]) Retryer[T]
 }
 
 // IsRetryableStatusCodeFn is called to determine if the status code is retryable.
-func (r Retryer[T]) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn) Retryer[T] {
+func (r Retryer[T]) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer[T] {
 	r.isRetryableStatusCodeFn = fn
 	return r
 }
@@ -157,7 +160,7 @@ func (r Retryer[T]) DoResponse(ctx context.Context, fn BuildRequestFn2, expected
 						goto RETURN
 					}
 				}
-				return Err[*http.Response, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(resp.StatusCode)})
+				return Err[*http.Response, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
 			}
 
 		RETURN:
@@ -189,7 +192,7 @@ func (r Retryer[T]) Do(ctx context.Context, fn BuildRequestFn2, expectedResponse
 						goto DECODE
 					}
 				}
-				return Err[T, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(resp.StatusCode)})
+				return Err[T, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
 			}
 
 		DECODE:
