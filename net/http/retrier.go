@@ -8,6 +8,8 @@ import (
 
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
+	typesext "github.com/go-playground/pkg/v5/types"
+	valuesext "github.com/go-playground/pkg/v5/values"
 	. "github.com/go-playground/pkg/v5/values/result"
 )
 
@@ -31,16 +33,16 @@ func (e ErrStatusCode) IsRetryable() bool {
 type BuildRequestFn2 func(ctx context.Context) Result[*http.Request, error]
 
 // DecodeFn is a function used to decode the response body into the desired type.
-type DecodeFn[T any] func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes) Result[T, error]
+type DecodeFn func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error
 
 // IsRetryableStatusCodeFn2 is a function used to determine if the provided status code is considered retryable.
 type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
 
 // Retryer is used to retry any fallible operation.
-type Retryer[T any] struct {
+type Retryer struct {
 	isRetryableFn           errorsext.IsRetryableFn2[error]
 	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
-	decodeFn                DecodeFn[T]
+	decodeFn                DecodeFn
 	backoffFn               errorsext.BackoffFn
 	client                  *http.Client
 	timeout                 time.Duration
@@ -60,20 +62,20 @@ type Retryer[T any] struct {
 // - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
 // - `Client` is set to `http.DefaultClient`.
 // - `MaxMemory` is set to 2MiB.
-// - `DecodeFn` is set to the existing `DecodeResponse` function that supports JSON and XML.
-func NewRetryer[T any]() Retryer[T] {
-	return Retryer[T]{
+// - `DecodeFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
+func NewRetryer() Retryer {
+	return Retryer{
 		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
 			_, isRetryable = errorsext.IsRetryableHTTP(err)
 			return
 		},
 		isRetryableStatusCodeFn: func(_ context.Context, code int) bool { return IsRetryableStatusCode(code) },
-		decodeFn: func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes) Result[T, error] {
-			data, err := DecodeResponse[T](resp, maxMemory)
+		decodeFn: func(ctx context.Context, resp *http.Response, maxMemory bytesext.Bytes, v any) error {
+			err := DecodeResponseAny(resp, maxMemory, v)
 			if err != nil {
-				return Err[T, error](err)
+				return err
 			}
-			return Ok[T, error](data)
+			return nil
 		},
 		client:    http.DefaultClient,
 		maxMemory: 2 * bytesext.MiB,
@@ -81,25 +83,25 @@ func NewRetryer[T any]() Retryer[T] {
 }
 
 // Client sets the `http.Client` for the `Retryer`.
-func (r Retryer[T]) Client(client *http.Client) Retryer[T] {
+func (r Retryer) Client(client *http.Client) Retryer {
 	r.client = client
 	return r
 }
 
 // IsRetryableFn sets the `IsRetryableFn` for the `Retryer`.
-func (r Retryer[T]) IsRetryableFn(fn errorsext.IsRetryableFn2[error]) Retryer[T] {
+func (r Retryer) IsRetryableFn(fn errorsext.IsRetryableFn2[error]) Retryer {
 	r.isRetryableFn = fn
 	return r
 }
 
 // IsRetryableStatusCodeFn is called to determine if the status code is retryable.
-func (r Retryer[T]) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer[T] {
+func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer {
 	r.isRetryableStatusCodeFn = fn
 	return r
 }
 
 // DecodeFn sets the decode function for the `Retryer`.
-func (r Retryer[T]) DecodeFn(fn DecodeFn[T]) Retryer[T] {
+func (r Retryer) DecodeFn(fn DecodeFn) Retryer {
 	r.decodeFn = fn
 	return r
 }
@@ -107,19 +109,19 @@ func (r Retryer[T]) DecodeFn(fn DecodeFn[T]) Retryer[T] {
 // MaxAttempts sets the maximum number of attempts for the `Retryer`.
 //
 // NOTE: Max attempts is optional and if not set will retry indefinitely on retryable errors.
-func (r Retryer[T]) MaxAttempts(mode errorsext.MaxAttemptsMode, maxAttempts uint8) Retryer[T] {
+func (r Retryer) MaxAttempts(mode errorsext.MaxAttemptsMode, maxAttempts uint8) Retryer {
 	r.mode, r.maxAttempts = mode, maxAttempts
 	return r
 }
 
 // Backoff sets the backoff function for the `Retryer`.
-func (r Retryer[T]) Backoff(fn errorsext.BackoffFn) Retryer[T] {
+func (r Retryer) Backoff(fn errorsext.BackoffFn) Retryer {
 	r.backoffFn = fn
 	return r
 }
 
 // MaxMemory sets the maximum memory to use when decoding the response body.
-func (r Retryer[T]) MaxMemory(maxMemory bytesext.Bytes) Retryer[T] {
+func (r Retryer) MaxMemory(maxMemory bytesext.Bytes) Retryer {
 	r.maxMemory = maxMemory
 	return r
 
@@ -129,7 +131,7 @@ func (r Retryer[T]) MaxMemory(maxMemory bytesext.Bytes) Retryer[T] {
 // of the `Retryer` execution.
 //
 // A timeout of 0 will disable the timeout and is the default.
-func (r Retryer[T]) Timeout(timeout time.Duration) Retryer[T] {
+func (r Retryer) Timeout(timeout time.Duration) Retryer {
 	r.timeout = timeout
 	return r
 }
@@ -139,7 +141,7 @@ func (r Retryer[T]) Timeout(timeout time.Duration) Retryer[T] {
 // or something custom is required.
 //
 // NOTE: it is up to the caller to close the response body if a successful request is made.
-func (r Retryer[T]) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedResponseCodes ...int) Result[*http.Response, error] {
+func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedResponseCodes ...int) Result[*http.Response, error] {
 	return errorsext.NewRetryer[*http.Response, error]().
 		IsRetryableFn(r.isRetryableFn).
 		MaxAttempts(r.mode, r.maxAttempts).
@@ -168,21 +170,22 @@ func (r Retryer[T]) DoResponse(ctx context.Context, fn BuildRequestFn2, expected
 		})
 }
 
-// Do will execute the provided functions code and automatically retry using the provided retry function.
-func (r Retryer[T]) Do(ctx context.Context, fn BuildRequestFn2, expectedResponseCodes ...int) Result[T, error] {
-	return errorsext.NewRetryer[T, error]().
+// Do will execute the provided functions code and automatically retry using the provided retry function decoding
+// the response body into the desired type `v`, which must be passed as mutable.
+func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResponseCodes ...int) error {
+	result := errorsext.NewRetryer[typesext.Nothing, error]().
 		IsRetryableFn(r.isRetryableFn).
 		MaxAttempts(r.mode, r.maxAttempts).
 		Backoff(r.backoffFn).
 		Timeout(r.timeout).
-		Do(ctx, func(ctx context.Context) Result[T, error] {
+		Do(ctx, func(ctx context.Context) Result[typesext.Nothing, error] {
 			req := fn(ctx)
 			if req.IsErr() {
-				return Err[T, error](req.Err())
+				return Err[typesext.Nothing, error](req.Err())
 			}
 			resp, err := r.client.Do(req.Unwrap())
 			if err != nil {
-				return Err[T, error](err)
+				return Err[typesext.Nothing, error](err)
 			}
 			defer resp.Body.Close()
 
@@ -192,10 +195,17 @@ func (r Retryer[T]) Do(ctx context.Context, fn BuildRequestFn2, expectedResponse
 						goto DECODE
 					}
 				}
-				return Err[T, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
+				return Err[typesext.Nothing, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
 			}
 
 		DECODE:
-			return r.decodeFn(ctx, resp, r.maxMemory)
+			if err = r.decodeFn(ctx, resp, r.maxMemory, v); err != nil {
+				return Err[typesext.Nothing, error](err)
+			}
+			return Ok[typesext.Nothing, error](valuesext.Nothing)
 		})
+	if result.IsErr() {
+		return result.Err()
+	}
+	return nil
 }

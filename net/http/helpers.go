@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"io"
 	"mime"
 	"net"
@@ -12,6 +13,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	bytesext "github.com/go-playground/pkg/v5/bytes"
 	ioext "github.com/go-playground/pkg/v5/io"
 )
 
@@ -319,6 +321,27 @@ func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{
 		if qp == QueryParams {
 			err = DecodeQueryParams(r, v)
 		}
+	}
+	return
+}
+
+// DecodeResponseAny takes the response and attempts to discover its content type via
+// the http headers and then decode the request body into the provided type.
+//
+// Example if header was "application/json" would decode using
+// json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).
+func DecodeResponseAny(r *http.Response, maxMemory bytesext.Bytes, v any) (err error) {
+	typ := r.Header.Get(ContentType)
+	if idx := strings.Index(typ, ";"); idx != -1 {
+		typ = typ[:idx]
+	}
+	switch typ {
+	case nakedApplicationJSON:
+		err = decodeJSON(r.Header, r.Body, NoQueryParams, nil, maxMemory, v)
+	case nakedApplicationXML:
+		err = decodeXML(r.Header, r.Body, NoQueryParams, nil, maxMemory, v)
+	default:
+		err = errors.New("unsupported content type")
 	}
 	return
 }
