@@ -79,8 +79,7 @@ func (r Retryer[T, E]) IsRetryableFn(fn IsRetryableFn2[E]) Retryer[T, E] {
 //
 // NOTE: Max attempts is optional and if not set will retry indefinitely on retryable errors.
 func (r Retryer[T, E]) MaxAttempts(mode MaxAttemptsMode, maxAttempts uint8) Retryer[T, E] {
-	r.maxAttemptsMode = mode
-	r.maxAttempts = maxAttempts
+	r.maxAttemptsMode, r.maxAttempts = mode, maxAttempts
 	return r
 }
 
@@ -121,15 +120,17 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			case MaxAttemptsNonRetryableReset:
 				if isRetryable {
 					remaining = r.maxAttempts
-				} else {
-					remaining = decrement(remaining)
+				} else if remaining > 0 {
+					remaining--
 				}
 			case MaxAttemptsNonRetryable:
-				if !isRetryable {
-					remaining = decrement(remaining)
+				if !isRetryable && remaining > 0 {
+					remaining--
 				}
 			case MaxAttempts:
-				remaining = decrement(remaining)
+				if remaining > 0 {
+					remaining--
+				}
 			}
 			if remaining == 0 {
 				return result
@@ -141,11 +142,4 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 		}
 		return result
 	}
-}
-
-func decrement(i uint8) uint8 {
-	if i == 0 {
-		return 0
-	}
-	return i - 1
 }
