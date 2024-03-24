@@ -106,12 +106,18 @@ func (r Retryer) IsRetryableFn(fn errorsext.IsRetryableFn2[error]) Retryer {
 
 // IsRetryableStatusCodeFn is called to determine if the status code is retryable.
 func (r Retryer) IsRetryableStatusCodeFn(fn IsRetryableStatusCodeFn2) Retryer {
+	if fn == nil {
+		fn = func(_ context.Context, _ int) bool { return false }
+	}
 	r.isRetryableStatusCodeFn = fn
 	return r
 }
 
 // DecodeFn sets the decode function for the `Retryer`.
 func (r Retryer) DecodeFn(fn DecodeAnyFn) Retryer {
+	if fn == nil {
+		fn = func(_ context.Context, _ *http.Response, _ bytesext.Bytes, _ any) error { return nil }
+	}
 	r.decodeFn = fn
 	return r
 }

@@ -71,6 +71,9 @@ func NewRetryer[T, E any]() Retryer[T, E] {
 
 // IsRetryableFn sets the `IsRetryableFn` for the `Retryer`.
 func (r Retryer[T, E]) IsRetryableFn(fn IsRetryableFn2[E]) Retryer[T, E] {
+	if fn == nil {
+		fn = func(_ context.Context, _ E) bool { return false }
+	}
 	r.isRetryableFn = fn
 	return r
 }
@@ -85,6 +88,9 @@ func (r Retryer[T, E]) MaxAttempts(mode MaxAttemptsMode, maxAttempts uint8) Retr
 
 // Backoff sets the backoff function for the `Retryer`.
 func (r Retryer[T, E]) Backoff(fn BackoffFn) Retryer[T, E] {
+	if fn == nil {
+		fn = func(_ context.Context, _ int) {}
+	}
 	r.bo = fn
 	return r
 }
@@ -140,9 +146,7 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 				return result
 			}
 		END:
-			if r.bo != nil {
-				r.bo(ctx, attempt)
-			}
+			r.bo(ctx, attempt)
 			attempt++
 			continue
 		}
