@@ -212,7 +212,7 @@ func DecodeMultipartForm(r *http.Request, qp QueryParamsOption, maxMemory int64,
 }
 
 // DecodeJSON decodes the request body into the provided struct and limits the request size via
-// an ioext.LimitReader using the maxMemory param.
+// an ioext.LimitReader using the maxBytes param.
 //
 // The Content-Type e.g. "application/json" and http method are not checked.
 //
@@ -246,7 +246,7 @@ func decodeJSON(headers http.Header, body io.Reader, qp QueryParamsOption, value
 }
 
 // DecodeXML decodes the request body into the provided struct and limits the request size via
-// an ioext.LimitReader using the maxMemory param.
+// an ioext.LimitReader using the maxBytes param.
 //
 // The Content-Type e.g. "application/xml" and http method are not checked.
 //
@@ -297,7 +297,7 @@ const (
 // Decode takes the request and attempts to discover its content type via
 // the http headers and then decode the request body into the provided struct.
 // Example if header was "application/json" would decode using
-// json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).
+// json.NewDecoder(ioext.LimitReader(r.Body, maxBytes)).Decode(v).
 //
 // This default to parsing query params if includeQueryParams=true and no other content type matches.
 //
@@ -329,7 +329,7 @@ func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{
 // the http headers and then decode the request body into the provided type.
 //
 // Example if header was "application/json" would decode using
-// json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).
+// json.NewDecoder(ioext.LimitReader(r.Body, maxBytes)).Decode(v).
 func DecodeResponseAny(r *http.Response, maxMemory bytesext.Bytes, v interface{}) (err error) {
 	typ := r.Header.Get(ContentType)
 	if idx := strings.Index(typ, ";"); idx != -1 {

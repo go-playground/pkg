@@ -19,7 +19,7 @@ import (
 // the http headers and then decode the request body into the provided type.
 //
 // Example if header was "application/json" would decode using
-// json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).
+// json.NewDecoder(ioext.LimitReader(r.Body, maxBytes)).Decode(v).
 func DecodeResponse[T any](r *http.Response, maxMemory bytesext.Bytes) (result T, err error) {
 	typ := r.Header.Get(ContentType)
 	if idx := strings.Index(typ, ";"); idx != -1 {

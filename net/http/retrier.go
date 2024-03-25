@@ -13,6 +13,7 @@ import (
 
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
+	ioext "github.com/go-playground/pkg/v5/io"
 	typesext "github.com/go-playground/pkg/v5/types"
 	valuesext "github.com/go-playground/pkg/v5/values"
 	. "github.com/go-playground/pkg/v5/values/result"
@@ -20,17 +21,22 @@ import (
 
 // ErrStatusCode can be used to treat/indicate a status code as an error and ability to indicate if it is retryable.
 type ErrStatusCode struct {
-	// Response contains the full HTTP response associated with the request.
-	// It is the responsibility of the caller to handle closing the body.
-	Response *http.Response
+	// StatusCode is the HTTP response status code that was encountered.
+	StatusCode int
 
 	// IsRetryableStatusCode indicates if the status code is considered retryable.
 	IsRetryableStatusCode bool
+
+	// Headers contains the headers from the HTTP response.
+	Headers http.Header
+
+	// Body is the optional body of the HTTP response.
+	Body []byte
 }
 
 // Error returns the error message for the status code.
 func (e ErrStatusCode) Error() string {
-	return "status code encountered: " + strconv.Itoa(e.Response.StatusCode)
+	return "status code encountered: " + strconv.Itoa(e.StatusCode)
 }
 
 // IsRetryable returns if the provided status code is considered retryable.
@@ -56,7 +62,7 @@ type Retryer struct {
 	backoffFn               errorsext.BackoffFn[error]
 	client                  *http.Client
 	timeout                 time.Duration
-	maxMemory               bytesext.Bytes
+	maxBytes                bytesext.Bytes
 	mode                    errorsext.MaxAttemptsMode
 	maxAttempts             uint8
 }
@@ -73,7 +79,7 @@ type Retryer struct {
 //   - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
 //   - `IsEarlyReturnFn` is set to check if the error is an `ErrStatusCode` and if the status code is non-retryable.
 //   - `Client` is set to `http.DefaultClient`.
-//   - `MaxMemory` is set to 2MiB.
+//   - `MaxBytes` is set to 2MiB.
 //   - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
 //
 // WARNING: The default functions may receive enhancements or fixes in the future which could change their behavior,
@@ -81,7 +87,7 @@ type Retryer struct {
 func NewRetryer() Retryer {
 	return Retryer{
 		client:      http.DefaultClient,
-		maxMemory:   2 * bytesext.MiB,
+		maxBytes:    2 * bytesext.MiB,
 		mode:        errorsext.MaxAttemptsNonRetryableReset,
 		maxAttempts: 5,
 		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
@@ -92,7 +98,7 @@ func NewRetryer() Retryer {
 		isEarlyReturnFn: func(_ context.Context, err error) bool {
 			var sce ErrStatusCode
 			if errors.As(err, &sce) {
-				return IsNonRetryableStatusCode(sce.Response.StatusCode)
+				return IsNonRetryableStatusCode(sce.StatusCode)
 			}
 			return false
 		},
@@ -109,14 +115,8 @@ func NewRetryer() Retryer {
 
 			var sce ErrStatusCode
 			if errors.As(err, &sce) {
-				// can close in backoff because if this function is hit we will be retrying again.
-				defer func() {
-					_, _ = io.Copy(io.Discard, sce.Response.Body)
-					_ = sce.Response.Body.Close()
-				}()
-
-				if sce.Response.Header != nil && (sce.Response.StatusCode == http.StatusTooManyRequests || sce.Response.StatusCode == http.StatusServiceUnavailable) {
-					if ra := HasRetryAfter(sce.Response.Header); ra.IsSome() {
+				if sce.Headers != nil && (sce.StatusCode == http.StatusTooManyRequests || sce.StatusCode == http.StatusServiceUnavailable) {
+					if ra := HasRetryAfter(sce.Headers); ra.IsSome() {
 						wait = ra.Unwrap()
 					}
 				}
@@ -182,12 +182,12 @@ func (r Retryer) Backoff(fn errorsext.BackoffFn[error]) Retryer {
 	return r
 }
 
-// MaxMemory sets the maximum memory to use when decoding the response body.
-//
-// This max memory will NOT be enforced when *http.Response is returned through an error and is up to the caller to
-// handle/limit it if desired.
-func (r Retryer) MaxMemory(maxMemory bytesext.Bytes) Retryer {
-	r.maxMemory = maxMemory
+// MaxBytes sets the maximum memory to use when decoding the response body including:
+// - upon unexpected status codes.
+// - when decoding the response body.
+// - when draining the response body before closing allowing connection re-use.
+func (r Retryer) MaxBytes(i bytesext.Bytes) Retryer {
+	r.maxBytes = i
 	return r
 
 }
@@ -230,9 +230,13 @@ func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedRes
 						goto RETURN
 					}
 				}
+				b, _ := io.ReadAll(ioext.LimitReader(resp.Body, r.maxBytes))
+				_ = resp.Body.Close()
 				return Err[*http.Response, error](ErrStatusCode{
-					Response:              resp,
+					StatusCode:            resp.StatusCode,
 					IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode),
+					Headers:               resp.Header,
+					Body:                  b,
 				})
 			}
 
@@ -251,8 +255,6 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 		Timeout(r.timeout).
 		IsEarlyReturnFn(r.isEarlyReturnFn).
 		Do(ctx, func(ctx context.Context) Result[typesext.Nothing, error] {
-			closeBody := true
-
 			req := fn(ctx)
 			if req.IsErr() {
 				return Err[typesext.Nothing, error](req.Err())
@@ -263,10 +265,8 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 				return Err[typesext.Nothing, error](err)
 			}
 			defer func() {
-				if closeBody {
-					_, _ = io.Copy(io.Discard, resp.Body)
-					_ = resp.Body.Close()
-				}
+				_, _ = io.Copy(io.Discard, ioext.LimitReader(resp.Body, r.maxBytes))
+				_ = resp.Body.Close()
 			}()
 
 			if len(expectedResponseCodes) > 0 {
@@ -275,15 +275,18 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 						goto DECODE
 					}
 				}
-				closeBody = false
+
+				b, _ := io.ReadAll(ioext.LimitReader(resp.Body, r.maxBytes))
 				return Err[typesext.Nothing, error](ErrStatusCode{
-					Response:              resp,
+					StatusCode:            resp.StatusCode,
 					IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode),
+					Headers:               resp.Header,
+					Body:                  b,
 				})
 			}
 
 		DECODE:
-			if err = r.decodeFn(ctx, resp, r.maxMemory, v); err != nil {
+			if err = r.decodeFn(ctx, resp, r.maxBytes, v); err != nil {
 				return Err[typesext.Nothing, error](err)
 			}
 			return Ok[typesext.Nothing, error](valuesext.Nothing)
