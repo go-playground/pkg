@@ -58,7 +58,6 @@ type Retryer struct {
 	maxMemory               bytesext.Bytes
 	mode                    errorsext.MaxAttemptsMode
 	maxAttempts             uint8
-	extractStatusCodeBody   bool
 }
 
 // NewRetryer returns a new `Retryer` with sane default values.
@@ -80,11 +79,10 @@ type Retryer struct {
 // however every attempt will be made to maintain backwards compatibility or made additive-only if possible.
 func NewRetryer() Retryer {
 	return Retryer{
-		client:                http.DefaultClient,
-		maxMemory:             2 * bytesext.MiB,
-		mode:                  errorsext.MaxAttemptsNonRetryableReset,
-		maxAttempts:           5,
-		extractStatusCodeBody: true,
+		client:      http.DefaultClient,
+		maxMemory:   2 * bytesext.MiB,
+		mode:        errorsext.MaxAttemptsNonRetryableReset,
+		maxAttempts: 5,
 		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
 			_, isRetryable = errorsext.IsRetryableHTTP(err)
 			return
@@ -190,13 +188,6 @@ func (r Retryer) MaxMemory(maxMemory bytesext.Bytes) Retryer {
 // A timeout of 0 will disable the timeout and is the default.
 func (r Retryer) Timeout(timeout time.Duration) Retryer {
 	r.timeout = timeout
-	return r
-}
-
-// DecodeBadStatusCodeResponseBody sets if the response body will be read, in its entirety up to the configured
-// `MaxMemory`, if the status code is not in the expected list and  added to the `ErrStatusCode.Body` error.
-func (r Retryer) DecodeBadStatusCodeResponseBody(b bool) Retryer {
-	r.extractStatusCodeBody = b
 	return r
 }
 
