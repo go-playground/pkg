@@ -153,10 +153,12 @@ func TestRetrierEarlyReturn(t *testing.T) {
 	Equal(t, isRetryableCount, 5)
 
 	// while here let's check the first test case again, `Retrier` should be a copy and original still intact.
+	isRetryableCount = 0
 	result = r.Do(context.Background(), func(ctx context.Context) Result[int, error] {
 		return Err[int, error](io.EOF)
 	})
 	Equal(t, result.IsErr(), true)
 	Equal(t, result.Err(), io.EOF)
 	Equal(t, earlyReturnCount, 1)
+	Equal(t, isRetryableCount, 0)
 }
