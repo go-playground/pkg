@@ -54,6 +54,9 @@ type DecodeAnyFn func(ctx context.Context, resp *http.Response, maxMemory bytese
 type IsRetryableStatusCodeFn2 func(ctx context.Context, code int) bool
 
 // Retryer is used to retry any fallible operation.
+//
+// The `Retryer` is designed to be stateless and reusable. Configuration is also copy and so a base `Retryer` can be
+// used and changed for one-off requests eg. changing max attempts resulting in a new `Retrier` for that request.
 type Retryer struct {
 	isRetryableFn           errorsext.IsRetryableFn2[error]
 	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
