@@ -330,7 +330,7 @@ func Decode(r *http.Request, qp QueryParamsOption, maxMemory int64, v interface{
 //
 // Example if header was "application/json" would decode using
 // json.NewDecoder(ioext.LimitReader(r.Body, maxMemory)).Decode(v).
-func DecodeResponseAny(r *http.Response, maxMemory bytesext.Bytes, v any) (err error) {
+func DecodeResponseAny(r *http.Response, maxMemory bytesext.Bytes, v interface{}) (err error) {
 	typ := r.Header.Get(ContentType)
 	if idx := strings.Index(typ, ";"); idx != -1 {
 		typ = typ[:idx]
