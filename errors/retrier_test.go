@@ -14,7 +14,7 @@ import (
 
 func TestRetrierMaxAttempts(t *testing.T) {
 	var i, j int
-	result := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int) {
+	result := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int, _ error) {
 		j++
 	}).MaxAttempts(MaxAttempts, 3).Do(context.Background(), func(ctx context.Context) Result[int, error] {
 		i++
@@ -38,7 +38,7 @@ func TestRetrierMaxAttemptsNonRetryable(t *testing.T) {
 		} else {
 			return true
 		}
-	}).Backoff(func(ctx context.Context, attempt int) {
+	}).Backoff(func(ctx context.Context, attempt int, _ error) {
 		j++
 		if j == 10 {
 			returnErr = io.EOF
@@ -65,7 +65,7 @@ func TestRetrierMaxAttemptsNonRetryableReset(t *testing.T) {
 		} else {
 			return true
 		}
-	}).Backoff(func(ctx context.Context, attempt int) {
+	}).Backoff(func(ctx context.Context, attempt int, _ error) {
 		j++
 		if j == 2 {
 			returnErr = io.ErrUnexpectedEOF
@@ -87,7 +87,7 @@ func TestRetrierMaxAttemptsNonRetryableReset(t *testing.T) {
 
 func TestRetrierMaxAttemptsUnlimited(t *testing.T) {
 	var i, j int
-	r := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int) {
+	r := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int, _ error) {
 		j++
 	}).MaxAttempts(MaxAttemptsUnlimited, 0)
 
@@ -103,7 +103,7 @@ func TestRetrierMaxAttemptsUnlimited(t *testing.T) {
 }
 
 func TestRetrierMaxAttemptsTimeout(t *testing.T) {
-	result := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int) {
+	result := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int, _ error) {
 	}).MaxAttempts(MaxAttempts, 1).Timeout(time.Second).
 		Do(context.Background(), func(ctx context.Context) Result[int, error] {
 			select {

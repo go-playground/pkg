@@ -28,7 +28,11 @@ const (
 )
 
 // BackoffFn is a function used to apply a backoff strategy to the retryable function.
-type BackoffFn func(ctx context.Context, attempt int)
+//
+// It accepts `E` in cases where the amount of time to backoff is dynamic, for example when and http request fails
+// with a 429 status code, the `Retry-After` header can be used to determine how long to backoff. It is not required
+// to use or handle `E` and can be ignored if desired.
+type BackoffFn[E any] func(ctx context.Context, attempt int, e E)
 
 // IsRetryableFn2 is called to determine if the type E is retryable.
 type IsRetryableFn2[E any] func(ctx context.Context, e E) (isRetryable bool)
@@ -45,7 +49,7 @@ type Retryer[T, E any] struct {
 	isEarlyReturnFn EarlyReturnFn[E]
 	maxAttemptsMode MaxAttemptsMode
 	maxAttempts     uint8
-	bo              BackoffFn
+	bo              BackoffFn[E]
 	timeout         time.Duration
 }
 
@@ -66,7 +70,7 @@ func NewRetryer[T, E any]() Retryer[T, E] {
 		isRetryableFn:   func(_ context.Context, _ E) bool { return false },
 		maxAttemptsMode: MaxAttemptsNonRetryableReset,
 		maxAttempts:     5,
-		bo: func(ctx context.Context, attempt int) {
+		bo: func(ctx context.Context, attempt int, _ E) {
 			t := time.NewTimer(time.Millisecond * 200)
 			defer t.Stop()
 			select {
@@ -103,9 +107,9 @@ func (r Retryer[T, E]) MaxAttempts(mode MaxAttemptsMode, maxAttempts uint8) Retr
 }
 
 // Backoff sets the backoff function for the `Retryer`.
-func (r Retryer[T, E]) Backoff(fn BackoffFn) Retryer[T, E] {
+func (r Retryer[T, E]) Backoff(fn BackoffFn[E]) Retryer[T, E] {
 	if fn == nil {
-		fn = func(_ context.Context, _ int) {}
+		fn = func(_ context.Context, _ int, _ E) {}
 	}
 	r.bo = fn
 	return r
@@ -134,8 +138,9 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			cancel()
 		}
 		if result.IsErr() {
-			isRetryable := r.isRetryableFn(ctx, result.Err())
-			if !isRetryable && r.isEarlyReturnFn != nil && r.isEarlyReturnFn(ctx, result.Err()) {
+			err := result.Err()
+			isRetryable := r.isRetryableFn(ctx, err)
+			if !isRetryable && r.isEarlyReturnFn != nil && r.isEarlyReturnFn(ctx, err) {
 				return result
 			}
 
@@ -165,7 +170,7 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 				return result
 			}
 		END:
-			r.bo(ctx, attempt)
+			r.bo(ctx, attempt, err)
 			attempt++
 			continue
 		}

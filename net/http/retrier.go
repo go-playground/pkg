@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 
+	asciiext "github.com/go-playground/pkg/v5/ascii"
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
 	typesext "github.com/go-playground/pkg/v5/types"
@@ -16,8 +17,14 @@ import (
 
 // ErrStatusCode can be used to treat/indicate a status code as an error and ability to indicate if it is retryable.
 type ErrStatusCode struct {
-	StatusCode            int
+	// StatusCode is the HTTP response status code that was encountered.
+	StatusCode int
+
+	// IsRetryableStatusCode indicates if the status code is considered retryable.
 	IsRetryableStatusCode bool
+
+	// Headers contains the headers from the HTTP response.
+	Headers http.Header
 }
 
 // Error returns the error message for the status code.
@@ -45,7 +52,7 @@ type Retryer struct {
 	isRetryableStatusCodeFn IsRetryableStatusCodeFn2
 	isEarlyReturnFn         errorsext.EarlyReturnFn[error]
 	decodeFn                DecodeAnyFn
-	backoffFn               errorsext.BackoffFn
+	backoffFn               errorsext.BackoffFn[error]
 	client                  *http.Client
 	timeout                 time.Duration
 	maxMemory               bytesext.Bytes
@@ -56,18 +63,26 @@ type Retryer struct {
 // NewRetryer returns a new `Retryer` with sane default values.
 //
 // The default values are:
-// - `IsRetryableFn` uses the existing `errorsext.IsRetryableHTTP` function.
-// - `MaxAttemptsMode` is `MaxAttemptsNonRetryableReset`.
-// - `MaxAttempts` is 5.
-// - `BackoffFn` will sleep for 200ms. It's recommended to use exponential backoff for production.
-// - `Timeout` is 0.
-// - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
-// - `IsEarlyReturnFn` is set to check if the error is an `ErrStatusCode` and if the status code is non-retryable.
-// - `Client` is set to `http.DefaultClient`.
-// - `MaxMemory` is set to 2MiB.
-// - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
+//   - `IsRetryableFn` uses the existing `errorsext.IsRetryableHTTP` function.
+//   - `MaxAttemptsMode` is `MaxAttemptsNonRetryableReset`.
+//   - `MaxAttempts` is 5.
+//   - `BackoffFn` will sleep for 200ms or is successful `Retry-After` header can be parsed. It's recommended to use
+//     exponential backoff for production with a quick copy-paste-modify of the default function
+//   - `Timeout` is 0.
+//   - `IsRetryableStatusCodeFn` is set to the existing `IsRetryableStatusCode` function.
+//   - `IsEarlyReturnFn` is set to check if the error is an `ErrStatusCode` and if the status code is non-retryable.
+//   - `Client` is set to `http.DefaultClient`.
+//   - `MaxMemory` is set to 2MiB.
+//   - `DecodeAnyFn` is set to the existing `DecodeResponseAny` function that supports JSON and XML.
+//
+// WARNING: The default functions may receive enhancements or fixes in the future which could change their behavior,
+// however every attempt will be made to maintain backwards compatibility or made additive-only if possible.
 func NewRetryer() Retryer {
 	return Retryer{
+		client:      http.DefaultClient,
+		maxMemory:   2 * bytesext.MiB,
+		mode:        errorsext.MaxAttemptsNonRetryableReset,
+		maxAttempts: 5,
 		isRetryableFn: func(ctx context.Context, err error) (isRetryable bool) {
 			_, isRetryable = errorsext.IsRetryableHTTP(err)
 			return
@@ -87,12 +102,27 @@ func NewRetryer() Retryer {
 			}
 			return nil
 		},
-		client:      http.DefaultClient,
-		maxMemory:   2 * bytesext.MiB,
-		mode:        errorsext.MaxAttemptsNonRetryableReset,
-		maxAttempts: 5,
-		backoffFn: func(ctx context.Context, attempt int) {
-			t := time.NewTimer(time.Millisecond * 200)
+		backoffFn: func(ctx context.Context, attempt int, err error) {
+
+			wait := time.Millisecond * 200
+
+			var sce ErrStatusCode
+			if (sce.StatusCode == http.StatusTooManyRequests || sce.StatusCode == http.StatusServiceUnavailable) && errors.As(err, &sce) && sce.Headers != nil {
+				if ra := sce.Headers.Get(RetryAfter); ra != "" {
+					if asciiext.IsDigit(ra[0]) {
+						if n, err := strconv.ParseInt(ra, 10, 64); err == nil {
+							wait = time.Duration(n) * time.Second
+						}
+					} else {
+						// not a number so must be a date in the future
+						if t, err := http.ParseTime(ra); err == nil {
+							wait = time.Until(t)
+						}
+					}
+				}
+			}
+
+			t := time.NewTimer(wait)
 			defer t.Stop()
 			select {
 			case <-ctx.Done():
@@ -147,7 +177,7 @@ func (r Retryer) MaxAttempts(mode errorsext.MaxAttemptsMode, maxAttempts uint8) 
 }
 
 // Backoff sets the backoff function for the `Retryer`.
-func (r Retryer) Backoff(fn errorsext.BackoffFn) Retryer {
+func (r Retryer) Backoff(fn errorsext.BackoffFn[error]) Retryer {
 	r.backoffFn = fn
 	return r
 }
@@ -195,7 +225,7 @@ func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedRes
 						goto RETURN
 					}
 				}
-				return Err[*http.Response, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
+				return Err[*http.Response, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode), Headers: resp.Header})
 			}
 
 		RETURN:
@@ -229,7 +259,7 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 						goto DECODE
 					}
 				}
-				return Err[typesext.Nothing, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode)})
+				return Err[typesext.Nothing, error](ErrStatusCode{StatusCode: resp.StatusCode, IsRetryableStatusCode: r.isRetryableStatusCodeFn(ctx, resp.StatusCode), Headers: resp.Header})
 			}
 
 		DECODE:
