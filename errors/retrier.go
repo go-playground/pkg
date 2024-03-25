@@ -56,9 +56,6 @@ type Retryer[T, E any] struct {
 	timeout         time.Duration
 }
 
-//TODO: Add example usages to documentation, reminder these are building blocks and although can be used directly
-//      are more likely to be used as part of a higher level function.
-
 // NewRetryer returns a new `Retryer` with sane default values.
 //
 // The default values are:
