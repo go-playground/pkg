@@ -5,6 +5,7 @@ package errorsext
 
 import (
 	"context"
+
 	optionext "github.com/go-playground/pkg/v5/values/option"
 	resultext "github.com/go-playground/pkg/v5/values/result"
 )
@@ -21,6 +22,8 @@ type IsRetryableFn[E any] func(err E) (reason string, isRetryable bool)
 type OnRetryFn[E any] func(ctx context.Context, originalErr E, reason string, attempt int) optionext.Option[E]
 
 // DoRetryable will execute the provided functions code and automatically retry using the provided retry function.
+//
+// Deprecated: use `errorsext.Retrier` instead which corrects design issues with the current implementation.
 func DoRetryable[T, E any](ctx context.Context, isRetryFn IsRetryableFn[E], onRetryFn OnRetryFn[E], fn RetryableFn[T, E]) resultext.Result[T, E] {
 	var attempt int
 	for {

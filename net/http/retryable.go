@@ -93,6 +93,8 @@ type BuildRequestFn func(ctx context.Context) (*http.Request, error)
 type IsRetryableStatusCodeFn func(code int) bool
 
 // DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
+//
+// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
 func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, buildFn BuildRequestFn) Result[*http.Response, error] {
 	if client == nil {
 		client = http.DefaultClient
@@ -135,6 +137,8 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 // Gzip supported:
 // - JSON
 // - XML
+//
+// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
 func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, buildFn BuildRequestFn) Result[T, error] {
 
 	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) Result[T, error] {
