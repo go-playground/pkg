@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `errorsext.Retrier` configurable retry helper for any fallible operation.
 - `httpext.Retrier` configurable retry helper for HTTP requests and parsing of responses.
 - `DecodeResponseAny` non-generic helper for decoding HTTP responses.
+- `HasRetryAfter` helper for checking if a response has a `Retry-After` header and returning duration to wait.
 
 ## [5.28.1] - 2024-02-14
 ### Fixed

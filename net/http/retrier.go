@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	asciiext "github.com/go-playground/pkg/v5/ascii"
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
 	typesext "github.com/go-playground/pkg/v5/types"
@@ -111,17 +110,8 @@ func NewRetryer() Retryer {
 
 			var sce ErrStatusCode
 			if (sce.StatusCode == http.StatusTooManyRequests || sce.StatusCode == http.StatusServiceUnavailable) && errors.As(err, &sce) && sce.Headers != nil {
-				if ra := sce.Headers.Get(RetryAfter); ra != "" {
-					if asciiext.IsDigit(ra[0]) {
-						if n, err := strconv.ParseInt(ra, 10, 64); err == nil {
-							wait = time.Duration(n) * time.Second
-						}
-					} else {
-						// not a number so must be a date in the future
-						if t, err := http.ParseTime(ra); err == nil {
-							wait = time.Until(t)
-						}
-					}
+				if ra := HasRetryAfter(sce.Headers); ra.IsSome() {
+					wait = ra.Unwrap()
 				}
 			}
 
