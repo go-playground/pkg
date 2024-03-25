@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `asciiext` package for ASCII related functions.
 - `errorsext.Retrier` configurable retry helper for any fallible operation.
 - `httpext.Retrier` configurable retry helper for HTTP requests and parsing of responses.
+- `DecodeResponseAny` non-generic helper for decoding HTTP responses.
 
 ## [5.28.1] - 2024-02-14
 ### Fixed
