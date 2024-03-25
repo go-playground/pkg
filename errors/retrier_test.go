@@ -5,6 +5,7 @@ package errorsext
 
 import (
 	"context"
+	"errors"
 	"io"
 	"testing"
 	"time"
@@ -118,4 +119,44 @@ func TestRetrierMaxAttemptsTimeout(t *testing.T) {
 		})
 	Equal(t, result.IsErr(), true)
 	Equal(t, result.Err(), context.DeadlineExceeded)
+}
+
+func TestRetrierEarlyReturn(t *testing.T) {
+	var earlyReturnCount int
+
+	r := NewRetryer[int, error]().Backoff(func(ctx context.Context, attempt int, _ error) {
+	}).MaxAttempts(MaxAttempts, 5).Timeout(time.Second).
+		IsEarlyReturnFn(func(ctx context.Context, err error) bool {
+			earlyReturnCount++
+			return errors.Is(err, io.EOF)
+		}).Backoff(nil)
+
+	result := r.Do(context.Background(), func(ctx context.Context) Result[int, error] {
+		return Err[int, error](io.EOF)
+	})
+	Equal(t, result.IsErr(), true)
+	Equal(t, result.Err(), io.EOF)
+	Equal(t, earlyReturnCount, 1)
+
+	// now let try with retryable overriding early return TL;DR retryable should take precedence over early return
+	earlyReturnCount = 0
+	isRetryableCount := 0
+	result = r.IsRetryableFn(func(ctx context.Context, err error) (isRetryable bool) {
+		isRetryableCount++
+		return errors.Is(err, io.EOF)
+	}).Do(context.Background(), func(ctx context.Context) Result[int, error] {
+		return Err[int, error](io.EOF)
+	})
+	Equal(t, result.IsErr(), true)
+	Equal(t, result.Err(), io.EOF)
+	Equal(t, earlyReturnCount, 0)
+	Equal(t, isRetryableCount, 5)
+
+	// while here let's check the first test case again, `Retrier` should be a copy and original still intact.
+	result = r.Do(context.Background(), func(ctx context.Context) Result[int, error] {
+		return Err[int, error](io.EOF)
+	})
+	Equal(t, result.IsErr(), true)
+	Equal(t, result.Err(), io.EOF)
+	Equal(t, earlyReturnCount, 1)
 }

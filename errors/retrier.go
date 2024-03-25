@@ -157,12 +157,10 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 					remaining--
 				}
 			case MaxAttemptsNonRetryable:
-				if !isRetryable {
-					if remaining > 0 {
-						remaining--
-					}
-				} else {
+				if isRetryable {
 					goto END
+				} else if remaining > 0 {
+					remaining--
 				}
 			case MaxAttempts:
 				if remaining > 0 {
