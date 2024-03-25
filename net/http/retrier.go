@@ -6,6 +6,7 @@ package httpext
 import (
 	"context"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"time"
@@ -107,11 +108,17 @@ func NewRetryer() Retryer {
 			wait := time.Millisecond * 200
 
 			var sce ErrStatusCode
-			if errors.As(err, &sce) && (sce.Response.StatusCode == http.StatusTooManyRequests || sce.Response.StatusCode == http.StatusServiceUnavailable) && sce.Response.Header != nil {
-				defer sce.Response.Body.Close()
+			if errors.As(err, &sce) {
+				// can close in backoff because if this function is hit we will be retrying again.
+				defer func() {
+					_, _ = io.Copy(io.Discard, sce.Response.Body)
+					_ = sce.Response.Body.Close()
+				}()
 
-				if ra := HasRetryAfter(sce.Response.Header); ra.IsSome() {
-					wait = ra.Unwrap()
+				if sce.Response.Header != nil && (sce.Response.StatusCode == http.StatusTooManyRequests || sce.Response.StatusCode == http.StatusServiceUnavailable) {
+					if ra := HasRetryAfter(sce.Response.Header); ra.IsSome() {
+						wait = ra.Unwrap()
+					}
 				}
 			}
 
@@ -176,6 +183,9 @@ func (r Retryer) Backoff(fn errorsext.BackoffFn[error]) Retryer {
 }
 
 // MaxMemory sets the maximum memory to use when decoding the response body.
+//
+// This max memory will NOT be enforced when *http.Response is returned through an error and is up to the caller to
+// handle/limit it if desired.
 func (r Retryer) MaxMemory(maxMemory bytesext.Bytes) Retryer {
 	r.maxMemory = maxMemory
 	return r
@@ -254,6 +264,7 @@ func (r Retryer) Do(ctx context.Context, fn BuildRequestFn2, v any, expectedResp
 			}
 			defer func() {
 				if closeBody {
+					_, _ = io.Copy(io.Discard, resp.Body)
 					_ = resp.Body.Close()
 				}
 			}()
