@@ -28,6 +28,34 @@ var (
 		// https://support.cloudflare.com/hc/en-us/articles/115003011431-Error-524-A-timeout-occurred#524error
 		524: true,
 	}
+	// nonRetryableStatusCodes defines common HTTP responses that are not considered never to be retryable.
+	nonRetryableStatusCodes = map[int]bool{
+		http.StatusBadRequest:                    true,
+		http.StatusUnauthorized:                  true,
+		http.StatusForbidden:                     true,
+		http.StatusMethodNotAllowed:              true,
+		http.StatusNotAcceptable:                 true,
+		http.StatusProxyAuthRequired:             true,
+		http.StatusConflict:                      true,
+		http.StatusLengthRequired:                true,
+		http.StatusPreconditionFailed:            true,
+		http.StatusRequestEntityTooLarge:         true,
+		http.StatusRequestURITooLong:             true,
+		http.StatusUnsupportedMediaType:          true,
+		http.StatusRequestedRangeNotSatisfiable:  true,
+		http.StatusExpectationFailed:             true,
+		http.StatusTeapot:                        true,
+		http.StatusMisdirectedRequest:            true,
+		http.StatusUnprocessableEntity:           true,
+		http.StatusPreconditionRequired:          true,
+		http.StatusRequestHeaderFieldsTooLarge:   true,
+		http.StatusUnavailableForLegalReasons:    true,
+		http.StatusNotImplemented:                true,
+		http.StatusHTTPVersionNotSupported:       true,
+		http.StatusLoopDetected:                  true,
+		http.StatusNotExtended:                   true,
+		http.StatusNetworkAuthenticationRequired: true,
+	}
 )
 
 // ErrRetryableStatusCode can be used to indicate a retryable HTTP status code was encountered as an error.
@@ -48,9 +76,14 @@ func (e ErrUnexpectedResponse) Error() string {
 	return "unexpected response encountered"
 }
 
-// IsRetryableStatusCode returns if the provided status code is considered retryable.
+// IsRetryableStatusCode returns true if the provided status code is considered retryable.
 func IsRetryableStatusCode(code int) bool {
 	return retryableStatusCodes[code]
+}
+
+// IsNonRetryableStatusCode returns true if the provided status code should generally not be retryable.
+func IsNonRetryableStatusCode(code int) bool {
+	return nonRetryableStatusCodes[code]
 }
 
 // BuildRequestFn is a function used to rebuild an HTTP request for use in retryable code.
@@ -60,6 +93,8 @@ type BuildRequestFn func(ctx context.Context) (*http.Request, error)
 type IsRetryableStatusCodeFn func(code int) bool
 
 // DoRetryableResponse will execute the provided functions code and automatically retry before returning the *http.Response.
+//
+// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
 func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, buildFn BuildRequestFn) Result[*http.Response, error] {
 	if client == nil {
 		client = http.DefaultClient
@@ -102,6 +137,8 @@ func DoRetryableResponse(ctx context.Context, onRetryFn errorsext.OnRetryFn[erro
 // Gzip supported:
 // - JSON
 // - XML
+//
+// Deprecated: use `httpext.Retrier` instead which corrects design issues with the current implementation.
 func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryableFn[error], onRetryFn errorsext.OnRetryFn[error], isRetryableStatusCode IsRetryableStatusCodeFn, client *http.Client, expectedResponseCode int, maxMemory bytesext.Bytes, buildFn BuildRequestFn) Result[T, error] {
 
 	return errorsext.DoRetryable(ctx, isRetryableFn, onRetryFn, func(ctx context.Context) Result[T, error] {

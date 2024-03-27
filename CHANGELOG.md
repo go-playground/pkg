@@ -6,6 +6,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.0] - 2024-03-24
+### Added
+- `asciiext` package for ASCII related functions.
+- `errorsext.Retrier` configurable retry helper for any fallible operation.
+- `httpext.Retrier` configurable retry helper for HTTP requests and parsing of responses.
+- `httpext.DecodeResponseAny` non-generic helper for decoding HTTP responses.
+- `httpext.HasRetryAfter` helper for checking if a response has a `Retry-After` header and returning duration to wait.
+
 ## [5.28.1] - 2024-02-14
 ### Fixed
 - Additional supported types, cast to `sql.Valuer` supported types, they need to be returned to the driver for evaluation.
@@ -120,7 +128,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.28.1...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.29.0...HEAD
+[5.29.0]: https://github.com/go-playground/pkg/compare/v5.28.1..v5.29.0
 [5.28.1]: https://github.com/go-playground/pkg/compare/v5.28.0..v5.28.1
 [5.28.0]: https://github.com/go-playground/pkg/compare/v5.27.0..v5.28.0
 [5.27.0]: https://github.com/go-playground/pkg/compare/v5.26.0..v5.27.0
