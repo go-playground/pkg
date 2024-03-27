@@ -59,11 +59,11 @@ type Retryer[T, E any] struct {
 // NewRetryer returns a new `Retryer` with sane default values.
 //
 // The default values are:
-// - `IsRetryableFn` will always return false as `E` is unknown until defined.
 // - `MaxAttemptsMode` is `MaxAttemptsNonRetryableReset`.
 // - `MaxAttempts` is 5.
+// - `Timeout` is 0 no context timeout.
+// - `IsRetryableFn` will always return false as `E` is unknown until defined.
 // - `BackoffFn` will sleep for 200ms. It's recommended to use exponential backoff for production.
-// - `Timeout` is 0.
 // - `EarlyReturnFn` will be None.
 func NewRetryer[T, E any]() Retryer[T, E] {
 	return Retryer[T, E]{
@@ -146,17 +146,17 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 
 			switch r.maxAttemptsMode {
 			case MaxAttemptsUnlimited:
-				goto END
+				goto RETRY
 			case MaxAttemptsNonRetryableReset:
 				if isRetryable {
 					remaining = r.maxAttempts
-					goto END
+					goto RETRY
 				} else if remaining > 0 {
 					remaining--
 				}
 			case MaxAttemptsNonRetryable:
 				if isRetryable {
-					goto END
+					goto RETRY
 				} else if remaining > 0 {
 					remaining--
 				}
@@ -168,7 +168,8 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			if remaining == 0 {
 				return result
 			}
-		END:
+
+		RETRY:
 			r.bo(ctx, attempt, err)
 			attempt++
 			continue
