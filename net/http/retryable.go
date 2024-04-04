@@ -33,6 +33,7 @@ var (
 		http.StatusBadRequest:                    true,
 		http.StatusUnauthorized:                  true,
 		http.StatusForbidden:                     true,
+		http.StatusNotFound:                      true,
 		http.StatusMethodNotAllowed:              true,
 		http.StatusNotAcceptable:                 true,
 		http.StatusProxyAuthRequired:             true,
