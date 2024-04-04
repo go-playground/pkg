@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.29.1] - 2024-04-04
+### Fixed
+- Added HTTP 404 to non retryable status codes.
+
 ## [5.29.0] - 2024-03-24
 ### Added
 - `asciiext` package for ASCII related functions.
@@ -128,7 +132,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.29.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.29.1...HEAD
+[5.29.1]: https://github.com/go-playground/pkg/compare/v5.29.0..v5.29.1
 [5.29.0]: https://github.com/go-playground/pkg/compare/v5.28.1..v5.29.0
 [5.28.1]: https://github.com/go-playground/pkg/compare/v5.28.0..v5.28.1
 [5.28.0]: https://github.com/go-playground/pkg/compare/v5.27.0..v5.28.0
