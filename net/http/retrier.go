@@ -5,12 +5,12 @@ package httpext
 
 import (
 	"context"
-	"errors"
 	"io"
 	"net/http"
 	"strconv"
 	"time"
 
+	"github.com/go-playground/errors/v5"
 	bytesext "github.com/go-playground/pkg/v5/bytes"
 	errorsext "github.com/go-playground/pkg/v5/errors"
 	ioext "github.com/go-playground/pkg/v5/io"
@@ -210,13 +210,13 @@ func (r Retryer) Timeout(timeout time.Duration) Retryer {
 //
 // NOTE: it is up to the caller to close the response body if a successful request is made.
 func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedResponseCodes ...int) Result[*http.Response, error] {
-	return errorsext.NewRetryer[*http.Response, error]().
+	result, stats := errorsext.NewRetryer[*http.Response, error]().
 		IsRetryableFn(r.isRetryableFn).
 		MaxAttempts(r.mode, r.maxAttempts).
 		Backoff(r.backoffFn).
 		Timeout(r.timeout).
 		IsEarlyReturnFn(r.isEarlyReturnFn).
-		Do(ctx, func(ctx context.Context) Result[*http.Response, error] {
+		DoWithStats(ctx, func(ctx context.Context) Result[*http.Response, error] {
 			req := fn(ctx)
 			if req.IsErr() {
 				return Err[*http.Response, error](req.Err())
@@ -246,6 +246,10 @@ func (r Retryer) DoResponse(ctx context.Context, fn BuildRequestFn2, expectedRes
 		RETURN:
 			return Ok[*http.Response, error](resp)
 		})
+	if result.IsErr() {
+		return Err[*http.Response, error](errors.Wrapf(result.Err(), "failed with %d retryable attempts, and %d non retryable attempts", stats.NumAttemptsRetryable, stats.NumAttemptsNonRetryable))
+	}
+	return result
 }
 
 // Do will execute the provided functions code and automatically retry using the provided retry function decoding

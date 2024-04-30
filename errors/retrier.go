@@ -124,8 +124,21 @@ func (r Retryer[T, E]) Timeout(timeout time.Duration) Retryer[T, E] {
 	return r
 }
 
-// Do will execute the provided functions code and automatically retry using the provided retry function.
+type Stats struct {
+	// Number of failed attempts that were retryable
+	NumAttemptsRetryable uint8
+	// Number of failed attempts that were non retryable (but we retried anyway)
+	NumAttemptsNonRetryable uint8
+}
+
 func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E] {
+	ret, _ := r.DoWithStats(ctx, fn)
+	return ret
+}
+
+// Do will execute the provided functions code and automatically retry using the provided retry function.
+func (r Retryer[T, E]) DoWithStats(ctx context.Context, fn RetryableFn[T, E]) (Result[T, E], Stats) {
+	stats := Stats{}
 	var attempt int
 	remaining := r.maxAttempts
 	for {
@@ -141,7 +154,7 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			err := result.Err()
 			isRetryable := r.isRetryableFn(ctx, err)
 			if !isRetryable && r.isEarlyReturnFn != nil && r.isEarlyReturnFn(ctx, err) {
-				return result
+				return result, stats
 			}
 
 			switch r.maxAttemptsMode {
@@ -149,24 +162,33 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 				goto RETRY
 			case MaxAttemptsNonRetryableReset:
 				if isRetryable {
+					stats.NumAttemptsRetryable++
 					remaining = r.maxAttempts
 					goto RETRY
 				} else if remaining > 0 {
+					stats.NumAttemptsNonRetryable++
 					remaining--
 				}
 			case MaxAttemptsNonRetryable:
 				if isRetryable {
+					stats.NumAttemptsRetryable++
 					goto RETRY
 				} else if remaining > 0 {
+					stats.NumAttemptsNonRetryable++
 					remaining--
 				}
 			case MaxAttempts:
+				if isRetryable {
+					stats.NumAttemptsRetryable++
+				} else {
+					stats.NumAttemptsNonRetryable++
+				}
 				if remaining > 0 {
 					remaining--
 				}
 			}
 			if remaining == 0 {
-				return result
+				return result, stats
 			}
 
 		RETRY:
@@ -174,6 +196,6 @@ func (r Retryer[T, E]) Do(ctx context.Context, fn RetryableFn[T, E]) Result[T, E
 			attempt++
 			continue
 		}
-		return result
+		return result, stats
 	}
 }
