@@ -4,14 +4,12 @@
 package timeext
 
 import (
-	_ "unsafe"
+	"time"
 )
 
-//go:noescape
-//go:linkname nanotime runtime.nanotime
-func nanotime() int64
+var base = time.Now()
 
-// NanoTime returns the time from the monotonic clock in nanoseconds.
+// NanoTime returns a monotonically increasing time in nanoseconds.
 func NanoTime() int64 {
-	return nanotime()
+	return int64(time.Since(base))
 }

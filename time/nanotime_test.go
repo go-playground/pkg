@@ -19,7 +19,7 @@ func TestNanoTime(t *testing.T) {
 
 func BenchmarkNanoTime(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		_ = nanotime()
+		_ = NanoTime()
 	}
 }
 

@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.30.0] - 2024-06-01
+### Changed
+- Changed NanoTome to not use linkname due to Go1.23 upcoming breaking changes. 
+
 ## [5.29.1] - 2024-04-04
 ### Fixed
 - Added HTTP 404 to non retryable status codes.
@@ -132,7 +136,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.29.1...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.30.0...HEAD
+[5.30.0]: https://github.com/go-playground/pkg/compare/v5.29.1..v5.30.0
 [5.29.1]: https://github.com/go-playground/pkg/compare/v5.29.0..v5.29.1
 [5.29.0]: https://github.com/go-playground/pkg/compare/v5.28.1..v5.29.0
 [5.28.1]: https://github.com/go-playground/pkg/compare/v5.28.0..v5.28.1
