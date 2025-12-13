@@ -5,11 +5,9 @@ package osext
 
 import (
 	"fmt"
-	"os"
+	"math/rand"
 	"testing"
 )
-
-const constTestEnvKey = "OSEXT_TEST_ENV_KEY_DO_NOT_USE"
 
 type (
 	CustomInt     int
@@ -78,25 +76,18 @@ func TestEnv(t *testing.T) {
 }
 
 func SetAndUnsetTest[T EnvDefaults](t *testing.T, envValueSet string, expectedSet T, expectedDefault T) error {
+	constTestEnvKey := fmt.Sprintf("TEST_ENV_%d", rand.Intn(1000000))
+
 	v := EnvOrDefault(constTestEnvKey, expectedDefault)
 	if v != expectedDefault {
 		return fmt.Errorf("default value mismatch: got %v, want %v", v, expectedDefault)
 	}
 
-	err := os.Setenv(constTestEnvKey, envValueSet)
-	if err != nil {
-		return fmt.Errorf("failed to set env var: %w", err)
-	}
+	t.Setenv(constTestEnvKey, envValueSet)
 
 	v = EnvOrDefault(constTestEnvKey, expectedDefault)
 	if v != expectedSet {
 		return fmt.Errorf("set value mismatch: got %v, want %v", v, expectedSet)
 	}
-
-	err = os.Unsetenv(constTestEnvKey)
-	if err != nil {
-		return fmt.Errorf("failed to unset env var: %w", err)
-	}
-
 	return nil
 }

@@ -22,7 +22,6 @@ type EnvDefaults interface {
 // a default value is returned.
 func EnvOrDefault[T EnvDefaults](key string, defaultValue T) T {
 	if v, ok := os.LookupEnv(key); ok {
-
 		rv := reflect.ValueOf(defaultValue)
 		ty := rv.Type()
 
