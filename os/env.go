@@ -16,77 +16,33 @@ type EnvDefaults interface {
 	constraintsext.Number | ~string
 }
 
-// EnvOrDefault retrieves the value of the environment variable named by the key.
+// Env retrieves the value of the environment variable named by the key.
 //
 // If the variable is not set, or if the conversion fails due to incorrect value,
 // a default value is returned.
-func EnvOrDefault[T EnvDefaults](key string, defaultValue T) T {
+func Env[T EnvDefaults](key string, defaultValue T) T {
 	if v, ok := os.LookupEnv(key); ok {
-		rv := reflect.ValueOf(defaultValue)
-		ty := rv.Type()
+		ty := reflect.TypeOf(defaultValue)
+		elem := reflect.New(ty).Elem()
 
 		switch ty.Kind() {
 		case reflect.String:
-			return reflect.ValueOf(v).Convert(ty).Interface().(T)
-		case reflect.Int:
-			i, err := strconv.ParseInt(v, 10, 0)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
+			elem.SetString(v)
+			return elem.Interface().(T)
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			if i, err := strconv.ParseInt(v, 10, ty.Bits()); err == nil {
+				elem.SetInt(i)
+				return elem.Interface().(T)
 			}
-		case reflect.Int8:
-			i, err := strconv.ParseInt(v, 10, 8)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
+		case reflect.Uintptr, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			if i, err := strconv.ParseUint(v, 10, ty.Bits()); err == nil {
+				elem.SetUint(i)
+				return elem.Interface().(T)
 			}
-		case reflect.Int16:
-			i, err := strconv.ParseInt(v, 10, 16)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Int32:
-			i, err := strconv.ParseInt(v, 10, 32)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Int64:
-			i, err := strconv.ParseInt(v, 10, 64)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Uint, reflect.Uintptr:
-			i, err := strconv.ParseUint(v, 10, 0)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Uint8:
-			i, err := strconv.ParseUint(v, 10, 8)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Uint16:
-			i, err := strconv.ParseUint(v, 10, 16)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Uint32:
-			i, err := strconv.ParseUint(v, 10, 32)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Uint64:
-			i, err := strconv.ParseUint(v, 10, 64)
-			if err == nil {
-				return reflect.ValueOf(i).Convert(ty).Interface().(T)
-			}
-		case reflect.Float32:
-			f, err := strconv.ParseFloat(v, 32)
-			if err == nil {
-				return reflect.ValueOf(f).Convert(ty).Interface().(T)
-			}
-		case reflect.Float64:
-			f, err := strconv.ParseFloat(v, 64)
-			if err == nil {
-				return reflect.ValueOf(f).Convert(ty).Interface().(T)
+		case reflect.Float32, reflect.Float64:
+			if f, err := strconv.ParseFloat(v, ty.Bits()); err == nil {
+				elem.SetFloat(f)
+				return elem.Interface().(T)
 			}
 		}
 	}

@@ -78,14 +78,14 @@ func TestEnv(t *testing.T) {
 func SetAndUnsetTest[T EnvDefaults](t *testing.T, envValueSet string, expectedSet T, expectedDefault T) error {
 	constTestEnvKey := fmt.Sprintf("TEST_ENV_%d", rand.Intn(1000000))
 
-	v := EnvOrDefault(constTestEnvKey, expectedDefault)
+	v := Env(constTestEnvKey, expectedDefault)
 	if v != expectedDefault {
 		return fmt.Errorf("default value mismatch: got %v, want %v", v, expectedDefault)
 	}
 
 	t.Setenv(constTestEnvKey, envValueSet)
 
-	v = EnvOrDefault(constTestEnvKey, expectedDefault)
+	v = Env(constTestEnvKey, expectedDefault)
 	if v != expectedSet {
 		return fmt.Errorf("set value mismatch: got %v, want %v", v, expectedSet)
 	}
