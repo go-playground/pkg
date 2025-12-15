@@ -64,6 +64,11 @@ func TestEnv(t *testing.T) {
 		// String types
 		{"string", func() error { return SetAndUnsetTest(t, "hello", "hello", "world") }},
 		{"CustomString", func() error { return SetAndUnsetTest(t, "hello", CustomString("hello"), CustomString("world")) }},
+
+		// Conversion failure test cases - these should return default values when conversion fails
+		{"int_conversion_failure", func() error { return SetAndUnsetTest(t, "not_a_number", 42, 42) }},
+		{"float32_conversion_failure", func() error { return SetAndUnsetTest(t, "not_a_float", float32(42.5), float32(42.5)) }},
+		{"float64_conversion_failure", func() error { return SetAndUnsetTest(t, "not_a_float", float64(42.5), float64(42.5)) }},
 	}
 
 	for _, tt := range tests {
