@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [5.31.0] - 2025-12-20
+### Added
+- Add new `osext` package with some helpers for fetching and parsing ENV variables. 
+
 ## [5.30.0] - 2024-06-01
 ### Changed
 - Changed NanoTome to not use linkname due to Go1.23 upcoming breaking changes. 
@@ -136,7 +140,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added `timext.NanoTime` for fast low level monotonic time with nanosecond precision.
 
-[Unreleased]: https://github.com/go-playground/pkg/compare/v5.30.0...HEAD
+[Unreleased]: https://github.com/go-playground/pkg/compare/v5.31.0...HEAD
+[5.31.0]: https://github.com/go-playground/pkg/compare/v5.30.0..v5.31.0
 [5.30.0]: https://github.com/go-playground/pkg/compare/v5.29.1..v5.30.0
 [5.29.1]: https://github.com/go-playground/pkg/compare/v5.29.0..v5.29.1
 [5.29.0]: https://github.com/go-playground/pkg/compare/v5.28.1..v5.29.0
