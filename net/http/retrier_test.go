@@ -39,7 +39,7 @@ func TestRetryer_SuccessNoRetries(t *testing.T) {
 	}, http.StatusOK)
 	Equal(t, result.IsOk(), true)
 	Equal(t, result.Unwrap().StatusCode, http.StatusOK)
-	defer result.Unwrap().Body.Close()
+	defer func() { _ = result.Unwrap().Body.Close() }()
 
 	var responseResult Test
 	err := retryer.Do(ctx, func(ctx context.Context) Result[*http.Request, error] {
@@ -83,7 +83,7 @@ func TestRetryer_SuccessWithRetries(t *testing.T) {
 	}, http.StatusOK)
 	Equal(t, result.IsOk(), true)
 	Equal(t, result.Unwrap().StatusCode, http.StatusOK)
-	defer result.Unwrap().Body.Close()
+	defer func() { _ = result.Unwrap().Body.Close() }()
 
 	count = 0 // reset count
 

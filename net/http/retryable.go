@@ -153,7 +153,7 @@ func DoRetryable[T any](ctx context.Context, isRetryableFn errorsext.IsRetryable
 		if resp.StatusCode != expectedResponseCode {
 			return Err[T, error](ErrUnexpectedResponse{Response: resp})
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 
 		data, err := DecodeResponse[T](resp, maxMemory)
 		if err != nil {
