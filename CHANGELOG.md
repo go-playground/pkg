@@ -5,6 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- CONTRIBUTING.md with AI agent attribution requirements and MSGV policy.
+- CLAUDE.md for Claude Code guidance.
+- Supported Go Versions (MSGV) section in README.
+
+### Changed
+- Bumped MSGV from Go 1.18 to Go 1.26.
+- CI matrix reduced to latest two Go versions (1.26.x, 1.27.x).
+- Updated GitHub Actions: checkout v6→v7, setup-go v6→v7, golangci-lint-action v4→v9.
 
 ## [5.31.0] - 2025-12-20
 ### Added

@@ -272,10 +272,7 @@ func (d *DoublyLinkedList[V]) Len() int {
 // Clear removes all elements from the Linked List.
 func (d *DoublyLinkedList[V]) Clear() {
 	// must loop and clean up references to each other.
-	for {
-		if d.PopBack() == nil {
-			break
-		}
+	for d.PopBack() != nil {
 	}
 	d.head, d.tail, d.len = nil, nil, 0
 }

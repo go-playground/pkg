@@ -71,9 +71,10 @@ func TestRetrierMaxAttemptsNonRetryableReset(t *testing.T) {
 		}
 	}).Backoff(func(ctx context.Context, attempt int, _ error) {
 		j++
-		if j == 2 {
+		switch j {
+		case 2:
 			returnErr = io.ErrUnexpectedEOF
-		} else if j == 10 {
+		case 10:
 			returnErr = io.EOF
 		}
 	}).MaxAttempts(MaxAttemptsNonRetryableReset, 3).Do(context.Background(), func(ctx context.Context) Result[int, error] {

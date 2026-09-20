@@ -29,9 +29,17 @@ This is a place to put common reusable code that is not quite a library but exte
 - HTTP helper functions and constant placeholders.
 - And much, much more.
 
+## Supported Go Versions
+
+This package is aligned with the [Go release policy](https://go.dev/doc/devel/release) in that support is guaranteed for the two most recent major versions.
+
+This does not mean the package will not work with older versions of Go, only that we reserve the right to increase the MSGV (Minimum Supported Go Version) when the need arises to address security issues/patches, OS issues & support, or newly introduced functionality that would greatly benefit the maintenance and/or usage of this package.
+
+If and when the MSGV is increased it will be done so in a minimum of a `Minor` release bump.
+
 ## How to Contribute
 
-Make a pull request... can't guarantee it will be added, going to strictly vet what goes in.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details on submitting pull requests, supported Go versions, and AI contribution guidelines.
 
 ## License
 
